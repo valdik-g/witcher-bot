@@ -1,0 +1,21 @@
+---
+require:
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/BlockLength:
+  IgnoredMethods:
+    - context
+    - describe
+
+Layout/LineLength:
+  Max: 120
+  Exclude:
+    - telegram-bot-ruby.gemspec
+    - examples/*.rb

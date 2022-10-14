@@ -1,0 +1,21 @@
+current directory: /home/valdik_g/dev/witcher_roleplay/vendor/bundle/ruby/3.0.0/gems/debug-1.6.2/ext/debug
+/usr/bin/ruby -I /usr/share/rubygems -r ./siteconf20221009-22655-xm9cg0.rb extconf.rb
+creating Makefile
+
+current directory: /home/valdik_g/dev/witcher_roleplay/vendor/bundle/ruby/3.0.0/gems/debug-1.6.2/ext/debug
+make DESTDIR\= clean
+rm -f 
+rm -f debug.so  *.o  *.bak mkmf.log .*.time
+
+current directory: /home/valdik_g/dev/witcher_roleplay/vendor/bundle/ruby/3.0.0/gems/debug-1.6.2/ext/debug
+make DESTDIR\=
+gcc -I. -I/usr/include -I/usr/include/ruby/backward -I/usr/include -I. -DHAVE_RB_ISEQ_PARAMETERS -DHAVE_RB_ISEQ_CODE_LOCATION    -fPIC -O2  -fexceptions -g -grecord-gcc-switches -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -fstack-protector-strong -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1  -mtune=generic -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fPIC -m64 -o debug.o -c debug.c
+gcc -I. -I/usr/include -I/usr/include/ruby/backward -I/usr/include -I. -DHAVE_RB_ISEQ_PARAMETERS -DHAVE_RB_ISEQ_CODE_LOCATION    -fPIC -O2  -fexceptions -g -grecord-gcc-switches -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -Wp,-D_GLIBCXX_ASSERTIONS -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -fstack-protector-strong -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1  -mtune=generic -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fPIC -m64 -o iseq_collector.o -c iseq_collector.c
+rm -f debug.so
+gcc -shared -o debug.so debug.o iseq_collector.o -L. -L/usr/lib64 -L. -Wl,-z,relro -Wl,--as-needed  -Wl,-z,now -specs=/usr/lib/rpm/redhat/redhat-hardened-ld -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -fstack-protector-strong -rdynamic -Wl,-export-dynamic -Wl,--no-as-needed -Wl,-z,relro -Wl,--as-needed  -Wl,-z,now -specs=/usr/lib/rpm/redhat/redhat-hardened-ld -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1   -m64  -lruby  -lm   -lc
+
+current directory: /home/valdik_g/dev/witcher_roleplay/vendor/bundle/ruby/3.0.0/gems/debug-1.6.2/ext/debug
+make DESTDIR\= install
+/usr/bin/mkdir -p . ./.gem.20221009-22655-yremaw/debug
+exit > .sitearchdir.-.debug.time
+/usr/bin/install -c -m 0755 debug.so ./.gem.20221009-22655-yremaw/debug
