@@ -72,3 +72,5 @@ group :test do
 end
 
 gem 'telegram-bot-ruby'
+
+gem 'sinatra'
