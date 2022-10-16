@@ -17,6 +17,7 @@ additional_kvest = false
 elixirs = ""
 description = ""
 yes = ["да", "дп", "дв", "жа", "ла", "жв", "жп", "лп", "лв"]
+no = ["нет", "неь", "неи", "нкт"]
 passport = nil
 
 kvest_name = ""
@@ -61,11 +62,10 @@ def output_passport(passport_id, message, bot)
   long_kvest = "Нет"
   long_kvest = Kvest.find_by(:id => passport.long_kvest_id).kvest_name if long_kvest_record
   additional_kvest = ""
-  if passport.additional_kvest != "Нет"
-    additional_kvest = "Свиток задания"
-    additional_kvest += "\n"
+  unless passport.additional_kvest == 0
+    additional_kvest = "Свиток задания #{passport.additional_kvest} штук(и)\n"
   end
-  kvests = "Кажется вы еще не выполнили ни одного квеста, вперед к доске объявлений\n" if kvests.empty?
+  kvests = "Кажется игрок еще не выполнил ни одного квеста!\n" if kvests.empty?
   title = ""
   if passport.main_title_id.nil?
     title = "Игрок еще не выбрал свой основной титул. Основной титул используется в сочетании с именем игрока, для вызова на турнир и в других ситуациях"
@@ -74,17 +74,15 @@ def output_passport(passport_id, message, bot)
   end
   passport_text = "\xF0\x9F\x97\xA1ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
 РАНГ- #{passport.rank}\n
+\xF0\x9F\x8F\xB0Школа: #{passport.school}\n
 \xF0\x9F\x93\xAFТитул: #{title}\n
 \xE2\x9D\x93Проходит квест:\n#{long_kvest}\n
 \xE2\x9D\x94Пройденные квесты\n#{kvests}
 \xF0\x9F\x93\x9CОПИСАНИЕ:\n#{passport.description}\n
 \xF0\x9F\x8E\x92СУМКА\nКроны - #{passport.crons}\xF0\x9F\xAA\x99
-#{passport.inventory}\n#{additional_kvest}
+#{passport.inventory.split(" ").join("\n")}#{additional_kvest}
 \xF0\x9F\xA7\xAAЭликсиры:\n#{passport.elixirs.split(" ").join("\n")}"
   
-  if passport.additional_kvest 
-    passport_text += "Свиток задания"
-  end
   bot.api.send_message(chat_id: message.chat.id, text: passport_text)
 end
 
@@ -225,7 +223,7 @@ Telegram::Bot::Client.run(token) do |bot|
             end
           when "\xF0\x9F\x93\xAFВыбрать основной титул\xF0\x9F\x93\xAF"
             titles = Passport.find_by(:id => user.passport_id).titles if user.passport_id
-            if titles
+            unless titles.empty?
               titles_message = ""
               titles.map do |title|
                 titles_message += "#{title.id}: #{title.title_name}\n"
@@ -234,7 +232,7 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: "Выберите основной титул, вводите цифрой")
               user.update(:step => "input_main_title")
             else
-              bot.api.send_message(chat_id: message.chat.id, text: "Похоже у вас нет титула")
+              bot.api.send_message(chat_id: message.chat.id, text: "Похоже у вас нет титулов")
             end
           when '/get_best_players', "Получить лучших ведьмаков"
             passports = Passport.order("level DESC, crons DESC")
@@ -293,11 +291,7 @@ Telegram::Bot::Client.run(token) do |bot|
           bot.api.send_message(chat_id: message.chat.id, text: "Введите элексиры (Нет если элесиры отстутствуют):")
           user.update(:step => "input_elixirs")
         when 'input_elixirs'
-          if message.text.downcase != "нет"
-            elixirs = message.text.downcase
-          else
-            elixirs = ""
-          end
+          elixirs = message.text
           bot.api.send_message(chat_id: message.chat.id, text: "Введите описание:")
           user.update(:step => "input_description")
         when 'input_description'

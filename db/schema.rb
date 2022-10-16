@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_10_13_190931) do
+ActiveRecord::Schema[7.0].define(version: 2022_10_16_201109) do
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -35,7 +35,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_10_13_190931) do
     t.string "school"
     t.integer "level"
     t.string "rank"
-    t.boolean "additional_kvest"
+    t.integer "additional_kvest", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "telegram_nick"
