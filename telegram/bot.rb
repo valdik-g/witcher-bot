@@ -73,7 +73,7 @@ def output_passport(passport_id, message, bot)
     title = Title.find_by(:id => passport.main_title_id).title_name
   end
   inventory = passport.inventory.split(" ").join("\n")
-  inventory += "\n" if passport.inventory.split(" ").length > 1
+  inventory += "\n" if passport.inventory.split(" ").length == 1
   passport_text = "\xF0\x9F\x97\xA1ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
 РАНГ- #{passport.rank}\n
 \xF0\x9F\x8F\xB0Школа: #{passport.school}\n
