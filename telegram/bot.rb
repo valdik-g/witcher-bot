@@ -72,6 +72,9 @@ def output_passport(passport_id, message, bot)
   else
     title = Title.find_by(:id => passport.main_title_id).title_name
   end
+  inventory = passport.inventory.split(" ").join("\n")
+  if passport.inventory.split(" ").length > 1
+    inventory += "\n"
   passport_text = "\xF0\x9F\x97\xA1ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
 РАНГ- #{passport.rank}\n
 \xF0\x9F\x8F\xB0Школа: #{passport.school}\n
@@ -283,7 +286,7 @@ Telegram::Bot::Client.run(token) do |bot|
           user.update(:step => "input_rank")
         when 'input_rank'
           rank = message.text
-          bot.api.send_message(chat_id: message.chat.id, text: "Есть ли у будующего ведьмака доп квест(Да/Нет):")
+          bot.api.send_message(chat_id: message.chat.id, text: "Есть ли у будующего ведьмака доп квест(Введите количество, 0 если их нет):")
           user.update(:step => "input_additional_kvest")
         when 'input_additional_kvest'
           additional_kvest_info = message.text.downcase
