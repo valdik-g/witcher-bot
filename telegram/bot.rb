@@ -82,7 +82,7 @@ def output_passport(passport_id, message, bot)
 \xE2\x9D\x94Пройденные квесты\n#{kvests}
 \xF0\x9F\x93\x9CОПИСАНИЕ:\n#{passport.description}\n
 \xF0\x9F\x8E\x92СУМКА\nКроны - #{passport.crons}\xF0\x9F\xAA\x99
-#{passport.inventory.split(" ").join("\n")}#{additional_kvest}
+#{inventory}#{additional_kvest}
 \xF0\x9F\xA7\xAAЭликсиры:\n#{passport.elixirs.split(" ").join("\n")}"
   
   bot.api.send_message(chat_id: message.chat.id, text: passport_text)
