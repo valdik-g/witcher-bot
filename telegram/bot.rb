@@ -354,8 +354,8 @@ Telegram::Bot::Client.run(token) do |bot|
           user.update(:step => 'input_kvest_number')
         when 'input_kvest_number'
           kvest_number = message.text
-          kvests_number = kvest_number.split("")
-          passports_number = passport_number.split("")
+          kvests_number = kvest_number.split(" ")
+          passports_number = passport_number.split(" ")
           passports_number.map do |pass_number|
             passport = Passport.find_by(:id => pass_number)
             if passport
