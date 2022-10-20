@@ -244,8 +244,8 @@ Telegram::Bot::Client.run(token) do |bot|
           when '/mem', "\xF0\x9F\xA4\xA1 Мемчик \xF0\x9F\xA4\xA1"
             # file_info = bot.api.getFile(message.document.file_id)
             # downloaded_file = bot.download_file(file_info.file_path
-            meme = (Dir.entries("./telegram/memes").select {|f| !File.directory? f}).sample
-            bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("./telegram/memes/#{meme}", 'image/jpg'))
+            meme = (Dir.entries("/home/cloud-user/witcher-bot/witcher-bot/telegram/memes").select {|f| !File.directory? f}).sample
+            bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'))
             # user.update(:step => "input_meme")
           end
         # when "input_meme"
