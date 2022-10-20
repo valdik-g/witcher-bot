@@ -90,7 +90,7 @@ end
 
 Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
-    # begin
+    begin
       user = find_or_build_user(message.from, message.chat.id)
       kb = [
         Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x93\x9C Получить свой паспорт \xF0\x9F\x93\x9C"),
@@ -501,9 +501,9 @@ Telegram::Bot::Client.run(token) do |bot|
           user.update(:step => nil)
         end
       end
-    # rescue
-    #   bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
-    #   user.update(:step => nil)
-    # end
+    rescue
+      bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
+      user.update(:step => nil)
+    end
   end
 end
