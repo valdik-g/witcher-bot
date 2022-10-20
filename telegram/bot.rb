@@ -74,7 +74,7 @@ def output_passport(passport_id, message, bot)
   end
   inventory = passport.inventory.split(" ").join("\n")
   inventory += "\n" if passport.inventory.split(" ").length == 1
-  passport_text = "\xF0\x9F\x97\xA1ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
+  passport_text = "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
 РАНГ- #{passport.rank}\n
 \xF0\x9F\x8F\xB0 Школа: #{passport.school}\n
 \xF0\x9F\x93\xAF Титул: #{title}\n
@@ -107,8 +107,7 @@ Telegram::Bot::Client.run(token) do |bot|
         when nil, 'start'
           case message.text
           when '/start', '/info'
-            bot.api.send_message(chat_id: message.chat.id, text: "Привет, я бот клуба 'Свое Дело', вот что я умею\nСписок моих команд появился внизу, удачи\xE2\x9D\xA4", reply_markup: markup)
-            # bot.api.send_message(chat_id: message.chat.id, text: "/get\n/create_passport\n/create_kvest\n/kvest_done\n/create_title")
+            bot.api.send_message(chat_id: message.chat.id, text: "Привет, я бот клуба 'Свое Дело'!\nСписок моих команд появился внизу, удачи \xE2\x9D\xA4", reply_markup: markup)
           when '/get', "\xF0\x9F\x93\x9C Получить свой паспорт \xF0\x9F\x93\x9C"
             if user.passport_id.nil?
               passport = Passport.find_by(:telegram_nick => user.username)
