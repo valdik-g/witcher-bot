@@ -253,18 +253,19 @@ Telegram::Bot::Client.run(token) do |bot|
             ]
             subscription = Passport.find_by(:id => user.passport_id).subscription
             debt = Passport.find_by(:id => user.passport_id).dept
-            bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x92\xB3 Абонемент: #{ 
+            subs_message = "\xF0\x9F\x92\xB3 Абонемент: "
             if subscription > 0 
-              "Осталось #{Passport.find_by(:id => user.passport_id).subscription} посещений(я)"
+              subs_message += "Осталось #{Passport.find_by(:id => user.passport_id).subscription} посещений(я)"
             else
-              "Кажется у вас нет абонемента, по секрету, внизу есть кнопочка чтобы получить скидку в 30%, только \xF0\x9F\xA4\xAB"
-            end}\n Долг: #{
-              if debt > 0 
-                "#{debt}р"
-              else
-                "Кажется у вас нет долгов, так держать! \xF0\x9F\x8E\x89"
-              end
-            }", reply_markup: sale_markup)
+              subs_message += "Кажется у вас нет абонемента, по секрету, внизу есть кнопочка чтобы получить скидку в 30%, только \xF0\x9F\xA4\xAB"
+            end
+            subs_message = "\n\xF0\x9F\x92\xB0 Долг: "
+            if debt > 0 
+              subs_message += "#{debt}р"
+            else
+              subs_message += "Кажется у вас нет долгов, так держать! \xF0\x9F\x8E\x89"
+            end
+            bot.api.send_message(chat_id: message.chat.id, text: subs_message, reply_markup: sale_markup)
           end
         # when "input_meme"
         #   file_info = bot.api.getFile(file_id: message.document.file_id)
