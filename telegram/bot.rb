@@ -538,7 +538,7 @@ Telegram::Bot::Client.run(token) do |bot|
           passports_number.map do |pass_number|
             passport = Passport.find_by(:id => pass_number)
             if passport
-              passport,update(:subscription => passport.subscription - 1)
+              passport.update(:subscription => passport.subscription - 1)
             end
           end
           bot.api.send_message(chat_id: message.chat.id, text: "Занятия вычтены")
