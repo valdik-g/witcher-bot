@@ -98,7 +98,7 @@ Telegram::Bot::Client.run(token) do |bot|
         Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x97\xBF Получить историю персонажа \xF0\x9F\x97\xBF"),
         Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\x9C\x8D Изменить историю персонажа \xE2\x9C\x8D"),
         Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x93\xAF Выбрать основной титул \xF0\x9F\x93\xAF"),
-        Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x92\xB3 Абонемент(Тестовый) \xF0\x9F\x92\xB3"),
+        Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"),
         Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\xA4\xA1 Мемчик \xF0\x9F\xA4\xA1"),
         Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\x9E\xA1 Переключить меню \xE2\x9E\xA1")
       ]
@@ -247,7 +247,7 @@ Telegram::Bot::Client.run(token) do |bot|
             meme = (Dir.entries("/home/cloud-user/witcher-bot/witcher-bot/telegram/memes").select {|f| !File.directory? f}).sample
             bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'))
             # user.update(:step => "input_meme")
-          when '/subscription', "\xF0\x9F\x92\xB3 Абонемент(Тестовый) \xF0\x9F\x92\xB3"
+          when '/subscription', "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"
             unless user.passport_id.nil?
               sale_markup_buttons = [
                 Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Хочу 30%', url: 'tg://user?id=612352098')
@@ -259,7 +259,7 @@ Telegram::Bot::Client.run(token) do |bot|
               if subscription > 0 
                 subs_message += "Осталось #{Passport.find_by(:id => user.passport_id).subscription} посещений(я)"
               else
-                subs_message += "Кажется у вас нет абонемента, по секрету, внизу есть кнопочка чтобы получить скидку в 30%, только \xF0\x9F\xA4\xAB"
+                subs_message += "Кажется у вас нет абонемента.\n Внизу есть кнопочка чтобы получить скидку в 30%, только \xF0\x9F\xA4\xAB"
               end
               subs_message += "\n\xF0\x9F\x92\xB0 Долг: "
               if debt > 0 
