@@ -214,6 +214,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 Telegram::Bot::Types::KeyboardButton.new(text: "Выполнить квест"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "Назначить титул"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "Изменить запись"),
+                Telegram::Bot::Types::KeyboardButton.new(text: "Списать занятия"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "Получить лучших ведьмаков"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\xAC\x85 Переключить меню \xE2\xAC\x85")
               ]
@@ -271,6 +272,14 @@ Telegram::Bot::Client.run(token) do |bot|
             else
               bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
             end
+          when '/substract', "Списать занятия"
+            bot.api.send_message(chat_id: message.chat.id, text: "Выберите тех, кто был на тренировке")
+            passports = Passport.all
+            passports_message = ""
+            passports.map do |passport|
+              passports_message += "#{passport.id}: #{passport.nickname}\n"
+            end
+            user.update(:step => "input_substract")
           end
         # when "input_meme"
         #   file_info = bot.api.getFile(file_id: message.document.file_id)
@@ -522,6 +531,16 @@ Telegram::Bot::Client.run(token) do |bot|
           else
             bot.api.send_message(chat_id: message.chat.id, text: "Неверный ввод, повторите команду снова")
           end
+          user.update(:step => nil)
+        when "input_substract"
+          passports_number = message.text.split(" ")
+          passports_number.map do |pass_number|
+            passport = Passport.find_by(:id => pass_number)
+            if passport
+              passport,update(:subscription => passport.subscription - 1)
+            end
+          end
+          bot.api.send_message(chat_id: message.chat.id, text: "Занятия вычтены")
           user.update(:step => nil)
         end
       end
