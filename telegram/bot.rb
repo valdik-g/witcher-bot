@@ -279,6 +279,7 @@ Telegram::Bot::Client.run(token) do |bot|
             passports.map do |passport|
               passports_message += "#{passport.id}: #{passport.nickname}\n"
             end
+            bot.api.send_message(chat_id: message.chat.id, text: passports_message)
             user.update(:step => "input_substract")
           end
         # when "input_meme"
