@@ -114,15 +114,17 @@ Telegram::Bot::Client.run(token) do |bot|
               passport = Passport.find_by(:telegram_nick => user.username)
               unless passport.nil?
                 user.update(:passport_id => passport.id)
-                if passport.bd.empty?
-                  user.update(:step => "input_bd")
-                  bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
-                end
+                user.update(:step => "input_bd")
+                bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
                 output_passport(passport.id, message, bot)
               else
                 bot.api.send_message(chat_id: message.chat.id, text: "Кажется ваш паспорт еще не существует, обратитесь к Анри Виллу")
               end
             else
+              if passport.bd.empty?
+                user.update(:step => "input_bd")
+                bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
+              end
               output_passport(user.passport_id, message, bot)
             end
           when '/get_best', "\xF0\x9F\x94\x9D Получить паспорт лучшего игрока \xF0\x9F\x94\x9D"
