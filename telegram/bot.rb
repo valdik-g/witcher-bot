@@ -90,7 +90,7 @@ end
 
 Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
-    begin
+    # begin
       user = find_or_build_user(message.from, message.chat.id)
       kb = [
         Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x93\x9C Получить свой паспорт \xF0\x9F\x93\x9C"),
@@ -121,11 +121,12 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: "Кажется ваш паспорт еще не существует, обратитесь к Анри Виллу")
               end
             else
-              if passport.bd.empty?
+              if Passport.find(user.passport_id).bd.empty?
                 user.update(:step => "input_bd")
                 bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
+              else
+                output_passport(user.passport_id, message, bot)
               end
-              output_passport(user.passport_id, message, bot)
             end
           when '/get_best', "\xF0\x9F\x94\x9D Получить паспорт лучшего игрока \xF0\x9F\x94\x9D"
             passport = Passport.order("level DESC, crons DESC").first
@@ -551,7 +552,7 @@ Telegram::Bot::Client.run(token) do |bot|
           user.update(:step => nil)
         when "input_bd"
           bd = message.text
-          Passport.find_by(:id => user.passport_id).update(:birth_date => id)
+          Passport.find_by(:id => user.passport_id).update(:bd => id)
           user.update(:step => "input_mail")
           bot.api.send_message(chat_id: message.chat.id, text: "Введите адрес электронной почты:")
         when "input_mail"
@@ -566,9 +567,9 @@ Telegram::Bot::Client.run(token) do |bot|
           user.update(:step => nil)
         end
       end
-    rescue
-      bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
-      user.update(:step => nil)
-    end
+    # rescue
+    #   bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
+    #   user.update(:step => nil)
+    # end
   end
 end
