@@ -114,7 +114,7 @@ Telegram::Bot::Client.run(token) do |bot|
               passport = Passport.find_by(:telegram_nick => user.username)
               unless passport.nil?
                 user.update(:passport_id => passport.id)
-                if(passport.bd == "")
+                if passport.bd.empty?
                   user.update(:step => "input_bd")
                   bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
                 end
