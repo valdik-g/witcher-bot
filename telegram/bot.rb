@@ -112,8 +112,12 @@ Telegram::Bot::Client.run(token) do |bot|
           when '/get', "\xF0\x9F\x93\x9C Получить свой паспорт \xF0\x9F\x93\x9C"
             if user.passport_id.nil?
               passport = Passport.find_by(:telegram_nick => user.username)
-              if !passport.nil?
+              unless passport.nil?
                 user.update(:passport_id => passport.id)
+                if(passport.bd == "")
+                  user.update(:step => "input_bd")
+                  bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
+                end
                 output_passport(passport.id, message, bot)
               else
                 bot.api.send_message(chat_id: message.chat.id, text: "Кажется ваш паспорт еще не существует, обратитесь к Анри Виллу")
@@ -542,6 +546,21 @@ Telegram::Bot::Client.run(token) do |bot|
             end
           end
           bot.api.send_message(chat_id: message.chat.id, text: "Занятия вычтены")
+          user.update(:step => nil)
+        when "input_bd"
+          bd = message.text
+          Passport.find_by(:id => user.passport_id).update(:birth_date => id)
+          user.update(:step => "input_mail")
+          bot.api.send_message(chat_id: message.chat.id, text: "Введите адрес электронной почты:")
+        when "input_mail"
+          mail = message.text
+          Passport.find_by(:id => user.passport_id).update(:mail => mail)
+          user.update(:step => "input_number")
+          bot.api.send_message(chat_id: message.chat.id, text: "Введите номер:")
+        when "input_number"
+          number = message.text
+          Passport.find_by(:id => user.passport_id).update(:mail => mail)
+          output_passport(user.passport_id, message, bot)
           user.update(:step => nil)
         end
       end
