@@ -552,7 +552,7 @@ Telegram::Bot::Client.run(token) do |bot|
           user.update(:step => nil)
         when "input_bd"
           bd = message.text
-          Passport.find_by(:id => user.passport_id).update(:bd => id)
+          Passport.find_by(:id => user.passport_id).update(:bd => bd)
           user.update(:step => "input_mail")
           bot.api.send_message(chat_id: message.chat.id, text: "Введите адрес электронной почты:")
         when "input_mail"
@@ -562,7 +562,7 @@ Telegram::Bot::Client.run(token) do |bot|
           bot.api.send_message(chat_id: message.chat.id, text: "Введите номер:")
         when "input_number"
           number = message.text
-          Passport.find_by(:id => user.passport_id).update(:mail => mail)
+          Passport.find_by(:id => user.passport_id).update(:number => number)
           output_passport(user.passport_id, message, bot)
           user.update(:step => nil)
         end
