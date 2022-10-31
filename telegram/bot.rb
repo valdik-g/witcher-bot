@@ -222,7 +222,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 Telegram::Bot::Types::KeyboardButton.new(text: "Назначить титул"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "Изменить запись"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "Списать занятия"),
-                Telegram::Bot::Types::KeyboardButton.new(text: "Получить лучших ведьмаков"),
+                Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\xAC\x85 Переключить меню \xE2\xAC\x85")
               ]
               admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
@@ -245,10 +245,13 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: "Похоже у вас нет титулов")
             end
           when '/get_best_players', "Получить лучших ведьмаков"
-            passports = Passport.order("level DESC, crons DESC")
+            passports = Passport.all
+            passports_message = ""
             passports.map do |passport|
-              output_passport(passport.id, message, bot)
+              passports_message += "#{passport.id}: #{passport.nickname}\n"
             end
+            bot.api.send_message(chat_id: message.chat.id, text: passports_message)
+            user.update(:step => "input_player_passport_number")
           when '/mem', "\xF0\x9F\xA4\xA1 Мемчик \xF0\x9F\xA4\xA1"
             # file_info = bot.api.getFile(message.document.file_id)
             # downloaded_file = bot.download_file(file_info.file_path
@@ -564,6 +567,14 @@ Telegram::Bot::Client.run(token) do |bot|
           number = message.text
           Passport.find_by(:id => user.passport_id).update(:number => number)
           output_passport(user.passport_id, message, bot)
+          user.update(:step => nil)
+        when "input_player_passport_number"
+          number = message.text
+          unless Passport.find_by(:id => number).nil?
+            output_passport(number, message, bot)
+          else
+            bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
+          end
           user.update(:step => nil)
         end
       end
