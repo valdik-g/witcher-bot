@@ -20,6 +20,8 @@ yes = ["да", "дп", "дв", "жа", "ла", "жв", "жп", "лп", "лв"]
 no = ["нет", "неь", "неи", "нкт"]
 passport = nil
 
+bot_ro_remind = nil
+
 kvest_name = ""
 kvest_description = ""
 crons_reward = 0
@@ -222,7 +224,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 Telegram::Bot::Types::KeyboardButton.new(text: "Назначить титул"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "Изменить запись"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "Списать занятия"),
-                Telegram::Bot::Types::KeyboardButton.new(text: "Получить лучших ведьмаков"),
+                Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
                 Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\xAC\x85 Переключить меню \xE2\xAC\x85")
               ]
               admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
@@ -244,8 +246,13 @@ Telegram::Bot::Client.run(token) do |bot|
             else
               bot.api.send_message(chat_id: message.chat.id, text: "Похоже у вас нет титулов")
             end
-          when '/get_best_players', "Получить лучших ведьмаков"
-            passports = Passport.order("level DESC, crons DESC")
+          when '/get_best_players', "Получить паспорт игрока"
+            passports = Passport.all
+            passports_message = ""
+            passports.map do |passport|
+              passports_message += "#{passport.id}: #{passport.nickname}\n"
+            end
+            bot.api.send_message(chat_id: message.chat.id, text: passports_message)
             passports.map do |passport|
               output_passport(passport.id, message, bot)
             end
@@ -564,6 +571,15 @@ Telegram::Bot::Client.run(token) do |bot|
           number = message.text
           Passport.find_by(:id => user.passport_id).update(:number => number)
           output_passport(user.passport_id, message, bot)
+          user.update(:step => nil)
+        when "input_player_passport_number"
+          number = message.text
+          Passport.find_by(:id => user.passport_id).update(:number => number)
+          unless passport.nil?
+            output_passport(user.passport_id, message, bot)
+          else
+            bot.api.send_message(chat_id: message.chat.id, text: "Неккоректный ввод, повторите команду снова")
+          end
           user.update(:step => nil)
         end
       end
