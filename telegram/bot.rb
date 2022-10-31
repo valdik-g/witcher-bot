@@ -6,7 +6,7 @@ require 'uri'
 require 'net/http'
 require 'openssl'
 
-token = "5587814730:AAGVyeQaIH4dnDCCdy-NHrbqQqOcN86r_NQ"
+token = "5587814730:AAFci39iNXTgIeDLVTvKpCjULW2a94zbuP8"
 
 witcher_name = ""
 crons = 0
@@ -103,7 +103,7 @@ Telegram::Bot::Client.run(token) do |bot|
         Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\x9E\xA1 Переключить меню \xE2\x9E\xA1")
       ]
       markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
-      if message.has_attribute?(:text)
+      if text in message
         unless message.text.nil? # && message.document.nil?
           case user.step
           when nil, 'start'
