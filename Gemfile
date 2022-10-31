@@ -74,5 +74,3 @@ end
 gem 'telegram-bot-ruby'
 
 gem 'sinatra'
-
-gem 'whenever'
