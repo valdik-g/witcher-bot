@@ -132,7 +132,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
               when '/get_best', "\xF0\x9F\x94\x9D Получить паспорт лучшего игрока \xF0\x9F\x94\x9D"
                 passport = Passport.order("level DESC, crons DESC").first
-                bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5"
+                bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
                 output_passport(passport.id, message, bot)
               when '/get_history', "\xF0\x9F\x97\xBF Получить историю персонажа \xF0\x9F\x97\xBF"
                 unless user.passport_id.nil?
