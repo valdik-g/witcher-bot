@@ -88,23 +88,14 @@ def output_passport(passport_id, message, bot)
   bot.api.send_message(chat_id: message.chat.id, text: passport_text, )
 end
 
+remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
+
 Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     case message
     when Telegram::Bot::Types::Message
       begin
         user = find_or_build_user(message.from, message.chat.id)
-        # kb = [
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x93\x9C Получить свой паспорт \xF0\x9F\x93\x9C"),
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x94\x9D Получить паспорт лучшего игрока \xF0\x9F\x94\x9D"),
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x97\xBF Получить историю персонажа \xF0\x9F\x97\xBF"),
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\x9C\x8D Изменить историю персонажа \xE2\x9C\x8D"),
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x93\xAF Выбрать основной титул \xF0\x9F\x93\xAF"),
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"),
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xF0\x9F\xA4\xA1 Мемчик \xF0\x9F\xA4\xA1"),
-        #   Telegram::Bot::Types::KeyboardButton.new(text: "\xE2\x9E\xA1 Переключить меню \xE2\x9E\xA1")
-        # ]
-        # markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: kb, resize_keyboard: true)
           unless message.text.nil? # && message.document.nil?
             case user.step
             when nil, 'start'
@@ -117,30 +108,29 @@ Telegram::Bot::Client.run(token) do |bot|
                   unless passport.nil?
                     user.update(:passport_id => passport.id)
                     user.update(:step => "input_bd")
-                    bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
-                    output_passport(passport.id, message, bot)
+                    bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):", reply_markup: remove_keyboard)
                   else
-                    bot.api.send_message(chat_id: message.chat.id, text: "Кажется ваш паспорт еще не существует, обратитесь к Анри Виллу")
+                    bot.api.send_message(chat_id: message.chat.id, text: "Кажется ваш паспорт еще не существует, обратитесь к Анри Виллу", reply_markup: remove_keyboard)
                   end
                 else
                   if Passport.find(user.passport_id).bd.empty?
                     user.update(:step => "input_bd")
-                    bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
+                    bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):", reply_markup: remove_keyboard)
                   else
                     output_passport(user.passport_id, message, bot)
                   end
                 end
               when '/get_best', "\xF0\x9F\x94\x9D Получить паспорт лучшего игрока \xF0\x9F\x94\x9D"
                 passport = Passport.order("level DESC, crons DESC").first
-                bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
+                bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5", reply_markup: remove_keyboard)
                 output_passport(passport.id, message, bot)
               when '/get_history', "\xF0\x9F\x97\xBF Получить историю персонажа \xF0\x9F\x97\xBF"
                 unless user.passport_id.nil?
                   history = Passport.find_by(:id => user.passport_id).history
                   history = "История вашего персонажа пуста" if history.empty?
-                  bot.api.send_message(chat_id: message.chat.id, text: history)
+                  bot.api.send_message(chat_id: message.chat.id, text: history, reply_markup: remove_keyboard)
                 else
-                  bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
+                  bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт", reply_markup: remove_keyboard)
                 end
               when '/update_history', "\xE2\x9C\x8D Изменить историю персонажа \xE2\x9C\x8D"
                 unless user.passport_id.nil?
@@ -214,7 +204,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Ты как сюда залез?)")
                 end
-              when "\xE2\x9E\xA1 Переключить меню \xE2\x9E\xA1", "\xE2\xAC\x85 Переключить меню \xE2\xAC\x85"
+              when "/switch", "\xE2\x9E\xA1 Переключить меню \xE2\x9E\xA1", "\xE2\xAC\x85 Переключить меню \xE2\xAC\x85"
                 if user.admin
                   admin_kb = [
                     Telegram::Bot::Types::KeyboardButton.new(text: "Создать паспорт"),
@@ -259,7 +249,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 # file_info = bot.api.getFile(message.document.file_id)
                 # downloaded_file = bot.download_file(file_info.file_path
                 meme = (Dir.entries("/home/cloud-user/witcher-bot/witcher-bot/telegram/memes").select {|f| !File.directory? f}).sample
-                bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'))
+                bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'), reply_markup: remove_keyboard)
                 # user.update(:step => "input_meme")
               when '/subscription', "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"
                 unless user.passport_id.nil?
@@ -445,13 +435,12 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: "Титул #{title_name} создан")
               user.update(:step => nil)
             when 'change_history'
-              kb = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
               if message.text == 'Отмена'
-                bot.api.send_message(chat_id: message.chat.id, text: "История не изменена", reply_markup: kb)
+                bot.api.send_message(chat_id: message.chat.id, text: "История не изменена", reply_markup: remove_keyboard)
               else
                 history = message.text
                 passport = Passport.find_by(:id => user.passport_id).update(:history => history)
-                bot.api.send_message(chat_id: message.chat.id, text: "История обновлена", reply_markup: kb)   
+                bot.api.send_message(chat_id: message.chat.id, text: "История обновлена", reply_markup: remove_keyboard)   
               end
               user.update(:step => nil)
             when 'update_field'
