@@ -148,11 +148,11 @@ Telegram::Bot::Client.run(token) do |bot|
               when '/get_kvests'
                 unless user.passport_id.nil?
                   kvests = Passport.find_by(:id => user.passport_id).kvests
-                  message = ""
+                  message_kvests = ""
                   kvests.each do |kvest|
-                    message += "#{kvest["kvest_name"]}\n"
+                    message_kvests += "#{kvest["kvest_name"]}\n"
                   end
-                  bot.api.send_message(chat_id: message.chat.id, text: message)
+                  bot.api.send_message(chat_id: message.chat.id, text: message_kvests)
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
                 end
