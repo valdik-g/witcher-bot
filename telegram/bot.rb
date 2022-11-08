@@ -84,8 +84,7 @@ def output_passport(passport_id, message, bot)
 \xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99
 #{inventory}#{additional_kvest}
 \xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(" ").join("\n")}"
-  get_kvests = [Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Получить квесты', callback_data: 'test1')]
-  bot.api.send_message(chat_id: message.chat.id, text: passport_text, )
+  bot.api.send_message(chat_id: message.chat.id, text: passport_text)
 end
 
 remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
@@ -143,6 +142,17 @@ Telegram::Bot::Client.run(token) do |bot|
                   history_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: history_mkb, resize_keyboard: true)
                   bot.api.send_message(chat_id: message.chat.id, text: "Введите новую историю", reply_markup: history_markup)
                   user.update(:step => "change_history")
+                else
+                  bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
+                end
+              when '/get_kvests'
+                unless user.passport_id.nil?
+                  kvests = Passport.find_by(:id => user.passport_id).kvests
+                  message = ""
+                  kvests.each do |kvest|
+                    message += "#{kvest["kvest_name"]}\n"
+                  end
+                  bot.api.send_message(chat_id: message.chat.id, text: message)
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
                 end
