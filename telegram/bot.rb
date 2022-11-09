@@ -637,7 +637,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 user.update(:step => nil)
               else
                 info_message = ""
-                case number
+                case info_number
                 when "1"
                   update_field = "bd"
                   info_message = "даты рождения"
@@ -650,11 +650,13 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
                 unless number in ["1", "2", "3"]
                   bot.api.send_message(chat_id: message.chat.id, text: "Введите новое значение для #{info_message}")
+                  p update_field
                   user.update(:step => "input_info_value")
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
                   user.update(:step => nil)
                 end
+                
               end
             when "input_info_value"
               value = message.text
