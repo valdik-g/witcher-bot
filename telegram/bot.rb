@@ -113,7 +113,7 @@ Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     case message
     when Telegram::Bot::Types::Message
-      # begin
+      begin
         user = find_or_build_user(message.from, message.chat.id)
           unless message.text.nil? # && message.document.nil?
             case user.step
@@ -666,10 +666,10 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             end
           end
-      # rescue
-      #   bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
-      #   user.update(:step => nil)
-      # end
+      rescue
+        bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
+        user.update(:step => nil)
+      end
     end
   end
 end
