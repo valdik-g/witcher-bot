@@ -329,7 +329,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 user.update(:step => "input_abon_info")
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
-                bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:remove_keyboard)
+                bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
               end
             # when "input_meme"
             #   file_info = bot.api.getFile(file_id: message.document.file_id)
