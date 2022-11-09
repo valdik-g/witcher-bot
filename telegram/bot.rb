@@ -61,7 +61,7 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по игроку"),
 ]
-admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: cancel_mkb, resize_keyboard: true)
+admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
 def find_or_build_user(user_obj, chat_id)
   user = User.find_by(:telegram_id => user_obj.id)
@@ -329,9 +329,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 user.update(:step => "input_abon_info")
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
-                bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: "bug")
+                bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:remove_keyboard)
               end
             # when "input_meme"
             #   file_info = bot.api.getFile(file_id: message.document.file_id)
