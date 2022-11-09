@@ -661,7 +661,6 @@ Telegram::Bot::Client.run(token) do |bot|
               Passport.find_by(:id => user.passport_id).update(update_field => value)
               reply_markup = user.admin ? admin_markup : remove_keyboard
               bot.api.send_message(chat_id: message.chat.id, text: "Значение обновлено", reply_markup: reply_markup)
-              bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if user.admin
               user.update(:step => nil)
             end
           end
