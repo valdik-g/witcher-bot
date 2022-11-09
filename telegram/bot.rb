@@ -118,7 +118,6 @@ Telegram::Bot::Client.run(token) do |bot|
           unless message.text.nil? # && message.document.nil?
             case user.step
             when nil, 'start'
-              bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               case message.text
               when '/start', '/info'
                 bot.api.send_message(chat_id: message.chat.id, text: "Привет, я бот клуба 'Свое Дело'!\nСписок моих команд находится внизу, удачи \xE2\x9D\xA4")
@@ -329,8 +328,8 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
                 user.update(:step => "input_abon_info")
               when '/remove'
-                bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)")
-                bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
+                reply_markup = user.admin ? admin_markup : remove_keyboard
+                bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
               else
                 bot.api.send_message(chat_id: message.chat.id, text: "bug")
               end
@@ -476,13 +475,13 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             when 'change_history'
               if message.text == 'Отмена'
-                bot.api.send_message(chat_id: message.chat.id, text: "История не изменена", reply_markup: remove_keyboard)
-                bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
+                reply_markup = user.admin ? admin_markup : remove_keyboard
+                bot.api.send_message(chat_id: message.chat.id, text: "История не изменена", reply_markup: reply_markup)
               else
                 history = message.text
                 passport = Passport.find_by(:id => user.passport_id).update(:history => history)
-                bot.api.send_message(chat_id: message.chat.id, text: "История обновлена", reply_markup: remove_keyboard)
-                bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin  
+                reply_markup = user.admin ? admin_markup : remove_keyboard
+                bot.api.send_message(chat_id: message.chat.id, text: "История обновлена", reply_markup: reply_markup)
               end
               user.update(:step => nil)
             when 'update_field'
@@ -622,7 +621,8 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             when "input_abon_info"
               number = message.text
-              bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup:remove_keyboard)
+              reply_markup = user.admin ? admin_markup : remove_keyboard
+              bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup: reply_markup)
               user.update(:step => nil)
               passport = Passport.find_by(:id => number)
               unless passport.nil?
@@ -634,7 +634,8 @@ Telegram::Bot::Client.run(token) do |bot|
             when "input_change_info_field"
               info_number = message.text
               if info_number == "Отмена"
-                bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup:remove_keyboard)
+                reply_markup = user.admin ? admin_markup : remove_keyboard
+                bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup:reply_markup)
                 user.update(:step => nil)
               else
                 info_message = ""
@@ -660,8 +661,9 @@ Telegram::Bot::Client.run(token) do |bot|
             when "input_info_value"
               value = message.text
               Passport.find_by(:id => user.passport_id).update(update_field => value)
-              bot.api.send_message(chat_id: message.chat.id, text: "Значение обновлено", reply_markup:remove_keyboard)
-              bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
+              reply_markup = user.admin ? admin_markup : remove_keyboard
+              bot.api.send_message(chat_id: message.chat.id, text: "Значение обновлено", reply_markup: reply_markup)
+              bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if user.admin
               user.update(:step => nil)
             end
           end
