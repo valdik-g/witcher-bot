@@ -622,18 +622,15 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             when "input_abon_info"
               number = message.text
-              if info_number == "Отмена"
-                bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup:remove_keyboard)
-                user.update(:step => nil)
+              bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup:remove_keyboard)
+              user.update(:step => nil)
+              passport = Passport.find_by(:id => number)
+              unless passport.nil?
+                bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
               else
-                passport = Passport.find_by(:id => number)
-                unless passport.nil?
-                  bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
-                else
-                  bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
-                end
-                user.update(:step => nil)
+                bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
               end
+              user.update(:step => nil)
             when "input_change_info_field"
               info_number = message.text
               if info_number == "Отмена"
