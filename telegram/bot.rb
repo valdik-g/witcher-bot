@@ -118,8 +118,8 @@ Telegram::Bot::Client.run(token) do |bot|
           unless message.text.nil? # && message.document.nil?
             case user.step
             when nil, 'start'
+              bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               case message.text
-                bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               when '/start', '/info'
                 bot.api.send_message(chat_id: message.chat.id, text: "Привет, я бот клуба 'Свое Дело'!\nСписок моих команд находится внизу, удачи \xE2\x9D\xA4")
               when '/passport', "\xF0\x9F\x93\x9C Получить свой паспорт \xF0\x9F\x93\x9C"
@@ -330,6 +330,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 user.update(:step => "input_abon_info")
               when '/remove'
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)")
+                bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               end
             # when "input_meme"
             #   file_info = bot.api.getFile(file_id: message.document.file_id)
