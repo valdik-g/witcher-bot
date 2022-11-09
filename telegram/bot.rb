@@ -156,7 +156,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 unless user.passport_id.nil?
                   history = Passport.find_by(:id => user.passport_id).history
                   history = "История вашего персонажа пуста, самое время это исправить!\nВведите историю вашего персонажа" if history.empty?
-                  bot.api.send_message(chat_id: message.chat.id, text: history)     
+                  bot.api.send_message(chat_id: message.chat.id, text: history)  
                   bot.api.send_message(chat_id: message.chat.id, text: "Введите новую историю", reply_markup: cancel_markup)
                   user.update(:step => "change_history")
                 else
@@ -331,6 +331,8 @@ Telegram::Bot::Client.run(token) do |bot|
               when '/remove'
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)")
                 bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: "bug")
               end
             # when "input_meme"
             #   file_info = bot.api.getFile(file_id: message.document.file_id)
