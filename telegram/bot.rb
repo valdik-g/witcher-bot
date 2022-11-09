@@ -118,7 +118,6 @@ Telegram::Bot::Client.run(token) do |bot|
           unless message.text.nil? # && message.document.nil?
             case user.step
             when nil, 'start'
-              bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               case message.text
               when '/start', '/info'
                 bot.api.send_message(chat_id: message.chat.id, text: "Привет, я бот клуба 'Свое Дело'!\nСписок моих команд находится внизу, удачи \xE2\x9D\xA4")
@@ -330,6 +329,8 @@ Telegram::Bot::Client.run(token) do |bot|
                 user.update(:step => "input_abon_info")
               when '/remove'
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)")
+                bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
+              else
                 bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               end
             # when "input_meme"
