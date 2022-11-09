@@ -118,6 +118,7 @@ Telegram::Bot::Client.run(token) do |bot|
           unless message.text.nil? # && message.document.nil?
             case user.step
             when nil, 'start'
+              bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               case message.text
               when '/start', '/info'
                 bot.api.send_message(chat_id: message.chat.id, text: "Привет, я бот клуба 'Свое Дело'!\nСписок моих команд находится внизу, удачи \xE2\x9D\xA4")
@@ -156,7 +157,7 @@ Telegram::Bot::Client.run(token) do |bot|
                   history = Passport.find_by(:id => user.passport_id).history
                   history = "История вашего персонажа пуста, самое время это исправить!\nВведите историю вашего персонажа" if history.empty?
                   bot.api.send_message(chat_id: message.chat.id, text: history)     
-                  bot.api.send_message(chat_id: message.chat.id, text: "Введите новую историю", reply_markup: cancrl_markup)
+                  bot.api.send_message(chat_id: message.chat.id, text: "Введите новую историю", reply_markup: cancel_markup)
                   user.update(:step => "change_history")
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
@@ -176,7 +177,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 unless user.passport_id.nil?
                   passport = Passport.find_by(:id => user.passport_id)
                   bot.api.send_message(chat_id: message.chat.id, text: "Личная информация:\n1. Дата рождения: #{passport.bd}\n2. Почта: #{passport.mail}\n3. Телефон: #{passport.number}")
-                  bot.api.send_message(chat_id: message.chat.id, text: "Что нужно изменить?\n1. Дата рождения\n2. Почта\n3. Телефон\nВводите цифрой")
+                  bot.api.send_message(chat_id: message.chat.id, text: "Что нужно изменить?\n1. Дата рождения\n2. Почта\n3. Телефон\nВводите цифрой", reply_markup: cancel_markup)
                   user.update(:step => "input_change_info_field")
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
@@ -329,8 +330,6 @@ Telegram::Bot::Client.run(token) do |bot|
                 user.update(:step => "input_abon_info")
               when '/remove'
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)")
-                bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
-              else
                 bot.api.send_message(chat_id: message.chat.id, reply_markup:admin_markup) if User.admin
               end
             # when "input_meme"
@@ -621,37 +620,43 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             when "input_abon_info"
               number = message.text
-              passport = Passport.find_by(:id => number)
-              unless passport.nil?
-                bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
+              if info_number == "Отмена"
+                bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup:remove_keyboard)
+                user.update(:step => nil)
               else
-                bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
+                passport = Passport.find_by(:id => number)
+                unless passport.nil?
+                  bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
+                else
+                  bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
+                end
+                user.update(:step => nil)
               end
-              user.update(:step => nil)
             when "input_change_info_field"
               info_number = message.text
-              info_message = ""
-              case number
-              when "1"
-                update_field = "bd"
-                info_message = "даты рождения"
-              when "2"
-                update_field = "mail"
-                info_message = "почты"
-              when "3"
-                update_field = "number"
-                info_message = "номера мобильного телефона"
-              end
-              unless number in ["1", "2", "3"]
-                cancel_mkb = [
-                      Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
-                    ]
-                cancel_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: cancel_mkb, resize_keyboard: true)
-                bot.api.send_message(chat_id: message.chat.id, text: "Введите новое значение для #{info_message}", reply_markup:cancel_markup)
-                user.update(:step => "input_info_value")
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
+              if info_number == "Отмена"
+                bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup:remove_keyboard)
                 user.update(:step => nil)
+              else
+                info_message = ""
+                case number
+                when "1"
+                  update_field = "bd"
+                  info_message = "даты рождения"
+                when "2"
+                  update_field = "mail"
+                  info_message = "почты"
+                when "3"
+                  update_field = "number"
+                  info_message = "номера мобильного телефона"
+                end
+                unless number in ["1", "2", "3"]
+                  bot.api.send_message(chat_id: message.chat.id, text: "Введите новое значение для #{info_message}")
+                  user.update(:step => "input_info_value")
+                else
+                  bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
+                  user.update(:step => nil)
+                end
               end
             when "input_info_value"
               value = message.text
