@@ -43,6 +43,13 @@ field_array = []
 
 passport_id = nil
 
+change_field = 0
+
+cancel_mkb = [
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
+]
+cancel_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: cancel_mkb, resize_keyboard: true)
+
 def find_or_build_user(user_obj, chat_id)
   user = User.find_by(:telegram_id => user_obj.id)
   username = ""
@@ -88,6 +95,8 @@ def output_passport(passport_id, message, bot)
 end
 
 remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
+
+
 
 Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
@@ -135,12 +144,8 @@ Telegram::Bot::Client.run(token) do |bot|
                 unless user.passport_id.nil?
                   history = Passport.find_by(:id => user.passport_id).history
                   history = "История вашего персонажа пуста, самое время это исправить!\nВведите историю вашего персонажа" if history.empty?
-                  bot.api.send_message(chat_id: message.chat.id, text: history)
-                  history_mkb = [
-                    Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
-                  ]
-                  history_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: history_mkb, resize_keyboard: true)
-                  bot.api.send_message(chat_id: message.chat.id, text: "Введите новую историю", reply_markup: history_markup)
+                  bot.api.send_message(chat_id: message.chat.id, text: history)     
+                  bot.api.send_message(chat_id: message.chat.id, text: "Введите новую историю", reply_markup: cancrl_markup)
                   user.update(:step => "change_history")
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
@@ -153,6 +158,15 @@ Telegram::Bot::Client.run(token) do |bot|
                     message_kvests += "#{kvest["kvest_name"]}\n"
                   end
                   bot.api.send_message(chat_id: message.chat.id, text: message_kvests)
+                else
+                  bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
+                end
+              when '/change_info'
+                unless user.passport_id.nil?
+                  passport = Passport.find_by(:id => user.passport_id)
+                  bot.api.send_message(chat_id: message.chat.id, text: "Личная информация:\n1.Дата рождения: #{passport.bd}\n2.Почта: #{passport.mail}\n3.Телефон: #{passport.number}")
+                  bot.api.send_message(chat_id: message.chat.id, text: "Что нужно изменить?\n1.Дата рождения\n2.Почта\n3.Телефон\nВводите цифрой")
+                  user.update(:step => "input_change_info_field")
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
                 end
@@ -596,6 +610,36 @@ Telegram::Bot::Client.run(token) do |bot|
               else
                 bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
               end
+              user.update(:step => nil)
+            when "input_change_info_field"
+              info_number = message.text
+              info_message = ""
+              case number
+              when "1"
+                update_field = "bd"
+                info_message = "даты рождения"
+              when "2"
+                update_field = "mail"
+                info_message = "почты"
+              when "3"
+                update_field = "number"
+                info_message = "номера мобильного телефона"
+              end
+              if number in ["1", "2", "3"]
+                cancel_mkb = [
+                      Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
+                    ]
+                cancel_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: cancel_mkb, resize_keyboard: true)
+                bot.api.send_message(chat_id: message.chat.id, text: "Введите новое значение для #{info_message}", reply_markup:cancel_markup)
+                user.update(:step => "input_info_value")
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
+                user.update(:step => nil)
+              end
+            when "input_info_value"
+              value = message.text
+              Passport.find_by(:id => user.passport_id).update(update_field => value)
+              bot.api.send_message(chat_id: message.chat.id, text: "Значение обновлено", reply_markup:remove_keyboard)
               user.update(:step => nil)
             end
           end
