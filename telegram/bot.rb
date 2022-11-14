@@ -98,10 +98,10 @@ def output_passport(passport_id, message, bot)
 РАНГ- #{passport.rank}\n
 \xF0\x9F\x8F\xB0 Школа: #{passport.school}\n
 \xF0\x9F\x93\xAF Титул: #{title}\n
-\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n#{"\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests}" if user.admin && passport.id != user.passport_id}
+\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n#{"\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests}" if User.find_by(:telegram_id => message.chat.id).admin && passport.id != User.find_by(:telegram_id => message.chat.id).passport_id}
 \xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}\n
 \xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99
-#{inventory}#{additional_kvest}#{"\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}" if passport.school == "Школа Змеи"}
+#{inventory}#{additional_kvest}#{"\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}\n" if passport.school == "Школа Змеи"}
 \xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(" ").join("\n")}"
   bot.api.send_message(chat_id: message.chat.id, text: passport_text)
 end
@@ -112,7 +112,7 @@ Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     case message
     when Telegram::Bot::Types::Message
-      begin
+      # begin
         user = find_or_build_user(message.from, message.chat.id)
           unless message.text.nil? # && message.document.nil?
             case user.step
@@ -665,10 +665,10 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             end
           end
-      rescue
-        bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
-        user.update(:step => nil)
-      end
+      # rescue
+      #   bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
+      #   user.update(:step => nil)
+      # end
     end
   end
 end
