@@ -101,7 +101,7 @@ def output_passport(passport_id, message, bot)
 \xF0\x9F\x93\xAF Титул: #{title}\n
 \xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n
 \xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}\n
-\xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99
+\xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99#{"\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}" if passport.school == "Школа Змеи"}
 #{inventory}#{additional_kvest}
 \xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(" ").join("\n")}"
   bot.api.send_message(chat_id: message.chat.id, text: passport_text)
@@ -280,11 +280,8 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
                 user.update(:step => "input_player_passport_number")
               when '/mem', "\xF0\x9F\xA4\xA1 Мемчик \xF0\x9F\xA4\xA1"
-                # file_info = bot.api.getFile(message.document.file_id)
-                # downloaded_file = bot.download_file(file_info.file_path
                 meme = (Dir.entries("/home/cloud-user/witcher-bot/witcher-bot/telegram/memes").select {|f| !File.directory? f}).sample
                 bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'))
-                # user.update(:step => "input_meme")
               when '/subscription', "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"
                 unless user.passport_id.nil?
                   sale_markup_buttons = [

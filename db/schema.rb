@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_10_25_171626) do
+ActiveRecord::Schema[7.0].define(version: 2022_11_14_075803) do
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -49,6 +49,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_10_25_171626) do
     t.string "bd", default: ""
     t.string "mail", default: ""
     t.string "number", default: ""
+    t.string "familiar", default: "Фамальяр еще не получен"
   end
 
   create_table "passports_titles", force: :cascade do |t|
