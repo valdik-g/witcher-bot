@@ -318,7 +318,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
                 user.update(:step => "input_substract")
-              when '/subscription_info', 'Получить информацию по абонементу'
+              when '/subscription_info', 'Информация по игроку'
                 bot.api.send_message(chat_id: message.chat.id, text: "Выберите паспорт")
                 passports = Passport.all
                 passports_message = ""
