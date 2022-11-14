@@ -94,15 +94,14 @@ def output_passport(passport_id, message, bot)
   end
   inventory = passport.inventory.split(" ").join("\n")
   inventory += "\n" if passport.inventory.split(" ").length == 1
-  # \xE2\x9D\x94 Пройденные квесты:\n#{kvests}
   passport_text = "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
 РАНГ- #{passport.rank}\n
 \xF0\x9F\x8F\xB0 Школа: #{passport.school}\n
 \xF0\x9F\x93\xAF Титул: #{title}\n
-\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n
+\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n#{"\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests}" if user.admin && passport.id != user.passport_id}
 \xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}\n
-\xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99#{"\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}" if passport.school == "Школа Змеи"}
-#{inventory}#{additional_kvest}
+\xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99
+#{inventory}#{additional_kvest}#{"\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}" if passport.school == "Школа Змеи"}
 \xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(" ").join("\n")}"
   bot.api.send_message(chat_id: message.chat.id, text: passport_text)
 end
@@ -623,7 +622,7 @@ Telegram::Bot::Client.run(token) do |bot|
               else
                 passport = Passport.find_by(:id => number)
                 unless passport.nil?
-                  bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.number}\nОстаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}", reply_markup: reply_markup)
+                  bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.bd}\nНомер телефона: #{passport.number}\nОстаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}", reply_markup: reply_markup)
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду", reply_markup: reply_markup)
                 end
