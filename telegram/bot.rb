@@ -623,7 +623,7 @@ Telegram::Bot::Client.run(token) do |bot|
               else
                 passport = Passport.find_by(:id => number)
                 unless passport.nil?
-                  bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}", reply_markup: reply_markup)
+                  bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.number}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}", reply_markup: reply_markup)
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду", reply_markup: reply_markup)
                 end
