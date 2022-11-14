@@ -616,16 +616,17 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             when "input_abon_info"
               number = message.text
+              reply_markup = user.admin ? admin_markup : remove_keyboard
               if number == "Отмена"
-                reply_markup = user.admin ? admin_markup : remove_keyboard
                 bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup: reply_markup)
                 user.update(:step => nil)
-              end
-              passport = Passport.find_by(:id => number)
-              unless passport.nil?
-                bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
               else
-                bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
+                passport = Passport.find_by(:id => number)
+                unless passport.nil?
+                  bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}", reply_markup: reply_markup)
+                else
+                  bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду", reply_markup: reply_markup)
+                end
               end
               user.update(:step => nil)
             when "input_change_info_field"
