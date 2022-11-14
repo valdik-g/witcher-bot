@@ -60,6 +60,7 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: "Списать занятия"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по игроку"),
+  Telegram::Bot::Types::KeyboardButton.new(text: "Информация по всем абонементам")
 ]
 admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
@@ -323,6 +324,13 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
                 user.update(:step => "input_abon_info")
+              when 'Информация по всем абонементам'
+                passports = Passport.all
+                passports_message = ""
+                passports.map do |passport|
+                  passports_message += "#{passport.nickname}: #{passport.subscription}\n"
+                end
+                bot.api.send_message(chat_id: message.chat.id, text: passports_message)
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
