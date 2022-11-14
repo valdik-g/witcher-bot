@@ -316,7 +316,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
                 user.update(:step => "input_substract")
               when '/subscription_info', 'Информация по игроку'
-                bot.api.send_message(chat_id: message.chat.id, text: "Выберите паспорт")
+                bot.api.send_message(chat_id: message.chat.id, text: "Выберите паспорт", reply_markup: cancel_markup)
                 passports = Passport.all
                 passports_message = ""
                 passports.map do |passport|
@@ -616,9 +616,11 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             when "input_abon_info"
               number = message.text
-              reply_markup = user.admin ? admin_markup : remove_keyboard
-              bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup: reply_markup)
-              user.update(:step => nil)
+              if number == "Отмена"
+                reply_markup = user.admin ? admin_markup : remove_keyboard
+                bot.api.send_message(chat_id: message.chat.id, text: "Действие отменено", reply_markup: reply_markup)
+                user.update(:step => nil)
+              end
               passport = Passport.find_by(:id => number)
               unless passport.nil?
                 bot.api.send_message(chat_id: message.chat.id, text: "Имя: #{passport.nickname}\nДень рождения: #{passport.nickname}\nНомер телефона: #{passport.numner}Остаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
