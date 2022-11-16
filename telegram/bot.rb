@@ -284,7 +284,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'))
               when '/subscription', "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"
                 unless user.passport_id.nil?
-                  if Passport.find_by(:id => user.passport_id).subscription > 1000
+                  if Passport.find_by(:id => user.passport_id).subscription.to_i> 1000
                     bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x8E\x89 Поздравляю! \xF0\x9F\x8E\x89\nТы блатной")
                   else
                     sale_markup_buttons = [
@@ -332,7 +332,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 passports = Passport.all
                 passports_message = ""
                 passports.map do |passport|
-                  passports_message += "#{passport.nickname}: #{passport.subscription}\n" if passport.subscription < 1000
+                  passports_message += "#{passport.nickname}: #{passport.subscription}\n" if passport.subscription.to_i < 1000
                 end
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
               when '/remove'
