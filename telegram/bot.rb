@@ -284,25 +284,29 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'))
               when '/subscription', "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"
                 unless user.passport_id.nil?
-                  sale_markup_buttons = [
-                    Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Хочу 30%', url: 'tg://user?id=612352098')
-                  ]
-                  sale_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: sale_markup_buttons)
-                  subscription = Passport.find_by(:id => user.passport_id).subscription
-                  debt = Passport.find_by(:id => user.passport_id).debt
-                  subs_message = "\xF0\x9F\x92\xB3 Абонемент: "
-                  if subscription > 0 
-                    subs_message += "Осталось #{Passport.find_by(:id => user.passport_id).subscription} посещений(я)"
+                  if Passport.find_by(:id => user.passport_id).subscription > 1000
+                    bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x8E\x89 Поздравляю! \xF0\x9F\x8E\x89\nТы блатной")
                   else
-                    subs_message += "Кажется у вас нет абонемента.\n Внизу есть кнопочка чтобы получить скидку в 30%, только \xF0\x9F\xA4\xAB"
+                    sale_markup_buttons = [
+                      Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Хочу 30%', url: 'tg://user?id=612352098')
+                    ]
+                    sale_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: sale_markup_buttons)
+                    subscription = Passport.find_by(:id => user.passport_id).subscription
+                    debt = Passport.find_by(:id => user.passport_id).debt
+                    subs_message = "\xF0\x9F\x92\xB3 Абонемент: "
+                    if subscription > 0 
+                      subs_message += "Осталось #{Passport.find_by(:id => user.passport_id).subscription} посещений(я)"
+                    else
+                      subs_message += "Кажется у вас нет абонемента.\n Внизу есть кнопочка чтобы получить скидку в 30%, только \xF0\x9F\xA4\xAB"
+                    end
+                    subs_message += "\n\xF0\x9F\x92\xB0 Долг: "
+                    if debt > 0 
+                      subs_message += "#{debt}р"
+                    else
+                      subs_message += "Кажется у вас нет долгов, так держать! \xF0\x9F\x8E\x89"
+                    end
+                    bot.api.send_message(chat_id: message.chat.id, text: subs_message, reply_markup: sale_markup)
                   end
-                  subs_message += "\n\xF0\x9F\x92\xB0 Долг: "
-                  if debt > 0 
-                    subs_message += "#{debt}р"
-                  else
-                    subs_message += "Кажется у вас нет долгов, так держать! \xF0\x9F\x8E\x89"
-                  end
-                  bot.api.send_message(chat_id: message.chat.id, text: subs_message, reply_markup: sale_markup)
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт")
                 end
@@ -328,7 +332,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 passports = Passport.all
                 passports_message = ""
                 passports.map do |passport|
-                  passports_message += "#{passport.nickname}: #{passport.subscription}\n"
+                  passports_message += "#{passport.nickname}: #{passport.subscription}\n" if passport.subscription < 1000
                 end
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
               when '/remove'
