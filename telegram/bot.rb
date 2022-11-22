@@ -115,7 +115,7 @@ Telegram::Bot::Client.run(token) do |bot|
     when Telegram::Bot::Types::Message
       # begin
         user = find_or_build_user(message.from, message.chat.id)
-          unless message.text.nil? # && message.document.nil?
+          unless message.text.nil? && !message.text.empty? # && message.document.nil?
             case user.step
             when nil, 'start'
               case message.text
