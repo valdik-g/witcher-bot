@@ -602,6 +602,8 @@ Telegram::Bot::Client.run(token) do |bot|
                     bot.api.send_message(chat_id: User.find_by(:passport_id => passport.id).telegram_id,
                      text: "У вас осталось #{passport.subscription} занятий в абонементе")
                   elsif passport.subscription == 0
+                    bot.api.send_message(chat_id: 612352098,
+                     text: "\xE2\x9A\xA0\xEF\xB8\x8F У #{passport.nickname} закончился абонемент \xE2\x9A\xA0\xEF\xB8\x8F")
                     bot.api.send_message(chat_id: User.find_by(:passport_id => passport.id).telegram_id,
                      text: "Ваш абонемент закончился \xF0\x9F\x98\xA2\nБегом за новым \xF0\x9F\x8F\x83")
                   end
