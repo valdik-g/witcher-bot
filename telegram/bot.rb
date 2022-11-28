@@ -598,6 +598,13 @@ Telegram::Bot::Client.run(token) do |bot|
                 passport = Passport.find_by(:id => pass_number)
                 if passport
                   passport.update(:subscription => passport.subscription - 1)
+                  if passport.subscription <= 3
+                    bot.api.send_message(chat_id: User.find_by(:passport_id => passport.id).telegram_id,
+                     text: "У вас осталось #{passport.subscription} занятий в абонементе")
+                  elsif passport.subscription == 0
+                    bot.api.send_message(chat_id: User.find_by(:passport_id => passport.id).telegram_id,
+                     text: "Ваш абонемент закончился \xF0\x9F\x98\xA2\nБегом за новым \xF0\x9F\x8F\x83")
+                  end
                 end
               end
               bot.api.send_message(chat_id: message.chat.id, text: "Занятия вычтены")
