@@ -74,3 +74,6 @@ end
 gem 'telegram-bot-ruby'
 
 gem 'sinatra'
+
+gem 'sidekiq', '~>6.5.5'
+gem "sidekiq-cron", "~> 1.1"
