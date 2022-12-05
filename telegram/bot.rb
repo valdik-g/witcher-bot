@@ -133,10 +133,10 @@ Telegram::Bot::Client.run(token) do |bot|
         user = find_or_build_user(message.from)
         passport = Passport.find_by(:id => user.passport_id)
         inventory = passport.inventory
-        inventory += "\n\n" if passport.inventory.split("\n").length != 0
+        inventory += "\n" if passport.inventory.split("\n").length != 0
         additional_kvest = ""
         unless passport.additional_kvest == 0
-          additional_kvest = "Свиток задания #{passport.additional_kvest} штук(и)\n\n"
+          additional_kvest = "\xF0\x9F\x8E\x9F\xEF\xB8\x8F Специальные предметы: Свиток задания #{passport.additional_kvest} штук(и)\n\n"
         end
         bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id, 
           text: "\xF0\x9F\x8E\x92 СУМКА:\n#{inventory}"\
