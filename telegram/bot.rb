@@ -62,9 +62,16 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по игроку"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по всем абонементам")
 ]
+
 admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
-def find_or_build_user(user_obj, chat_id)
+passport_kb = [
+  Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Получить инвентарь', callback_data: 'inventory')
+]
+
+passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: passport_kb)
+
+def find_or_build_user(user_obj, chat_id = nil)
   user = User.find_by(:telegram_id => user_obj.id)
   username = ""
   username += "#{user_obj.first_name}"
@@ -73,7 +80,7 @@ def find_or_build_user(user_obj, chat_id)
   user || User.create(:telegram_id => user_obj.id, :username => username)
 end
 
-def output_passport(passport_id, message, bot)
+def output_passport(passport_id, chat_id, bot)
   passport = Passport.find_by(:id => passport_id)
   kvests = ""
   passport.kvests.map do |kvest|
@@ -99,12 +106,9 @@ def output_passport(passport_id, message, bot)
 РАНГ- #{passport.rank}\n
 \xF0\x9F\x8F\xB0 Школа: #{passport.school}\n
 \xF0\x9F\x93\xAF Титул: #{title}\n
-\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n#{"\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests}" if User.find_by(:telegram_id => message.chat.id).admin && passport.id != User.find_by(:telegram_id => message.chat.id).passport_id}
+\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n#{"\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests}" if User.find_by(:telegram_id => chat_id).admin && passport.id != User.find_by(:telegram_id => chat_id).passport_id}
 \xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}\n
-\xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99
-#{inventory}#{additional_kvest}#{"\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}\n" if passport.school == "Школа Змеи"}
-\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(" ").join("\n")}"
-  bot.api.send_message(chat_id: message.chat.id, text: passport_text)
+\xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99"
 end
 
 remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
@@ -118,9 +122,35 @@ Telegram::Bot::Client.run(token) do |bot|
 
   bot.listen do |message|
     case message
+    when Telegram::Bot::Types::CallbackQuery
+      case message.data
+      when "inventory"
+        get_passport_kb = [
+          Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Получить паспорт', callback_data: 'passport')
+        ]
+        
+        get_passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: get_passport_kb)
+        user = find_or_build_user(message.from)
+        passport = Passport.find_by(:id => user.passport_id)
+        inventory = passport.inventory.split(" ").join("\n")
+        inventory += "\n\n" if passport.inventory.split("\n").length != 0
+        additional_kvest = ""
+        unless passport.additional_kvest == 0
+          additional_kvest = "\nСвиток задания #{passport.additional_kvest} штук(и)\n\n"
+        end
+        bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id, 
+          text: "\xF0\x9F\x8E\x92 СУМКА:\n#{inventory}"\
+          "#{additional_kvest}\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(" ").join("\n")}#{"\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}\n" if passport.school == "Школа Змеи"}",
+          reply_markup: get_passport_markup)
+      when "passport"
+        user = find_or_build_user(message.from)
+        bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id, 
+          text: output_passport(user.passport_id, user.telegram_id, bot),
+          reply_markup: passport_markup)
+      end
     when Telegram::Bot::Types::Message
       begin
-        user = find_or_build_user(message.from, message.chat.id)
+      user = find_or_build_user(message.from, message.chat.id)
           unless message.text.nil? && !message.text.empty? # && message.document.nil?
             case user.step
             when nil, 'start'
@@ -142,13 +172,13 @@ Telegram::Bot::Client.run(token) do |bot|
                     user.update(:step => "input_bd")
                     bot.api.send_message(chat_id: message.chat.id, text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
                   else
-                    output_passport(user.passport_id, message, bot)
+                    bot.api.send_message(chat_id: message.chat.id, text: output_passport(user.passport_id, message.chat.id, bot), reply_markup: passport_markup)
                   end
                 end
               when '/get_best', "\xF0\x9F\x94\x9D Получить паспорт лучшего игрока \xF0\x9F\x94\x9D"
                 passport = Passport.order("level DESC, crons DESC").first
                 bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
-                output_passport(passport.id, message, bot)
+                bot.api.send_message(chat_id: message.chat.id, text: output_passport(passport.id, message.chat.id, bot), reply_markup: passport_markup)
               when '/get_history', "\xF0\x9F\x97\xBF Получить историю персонажа \xF0\x9F\x97\xBF"
                 unless user.passport_id.nil?
                   history = Passport.find_by(:id => user.passport_id).history
@@ -630,12 +660,12 @@ Telegram::Bot::Client.run(token) do |bot|
             when "input_number"
               number = message.text
               Passport.find_by(:id => user.passport_id).update(:number => number)
-              output_passport(user.passport_id, message, bot)
+              bot.api.send_message(chat_id: message.chat.id, text: output_passport(user.passport_id, message.chat.id, bot), reply_markup: passport_markup)
               user.update(:step => nil)
             when "input_player_passport_number"
               number = message.text
               unless Passport.find_by(:id => number).nil?
-                output_passport(number, message, bot)
+                bot.api.send_message(chat_id: message.chat.id, text: output_passport(number, message.chat.id, bot), reply_markup: passport_markup)
               else
                 bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
               end
