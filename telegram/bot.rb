@@ -132,11 +132,11 @@ Telegram::Bot::Client.run(token) do |bot|
         get_passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: get_passport_kb)
         user = find_or_build_user(message.from)
         passport = Passport.find_by(:id => user.passport_id)
-        inventory = passport.inventory.split(" ").join("\n")
+        inventory = passport.inventory
         inventory += "\n\n" if passport.inventory.split("\n").length != 0
         additional_kvest = ""
         unless passport.additional_kvest == 0
-          additional_kvest = "\nСвиток задания #{passport.additional_kvest} штук(и)\n\n"
+          additional_kvest = "Свиток задания #{passport.additional_kvest} штук(и)\n\n"
         end
         bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id, 
           text: "\xF0\x9F\x8E\x92 СУМКА:\n#{inventory}"\
