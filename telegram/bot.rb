@@ -117,7 +117,7 @@ remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard:
 Telegram::Bot::Client.run(token) do |bot|
   Sidekiq::Cron::Job.create(
     name: "BirthdayCheck",
-    cron: "00 13 * * * Europe/Minsk", 
+    cron: "10 13 * * * Europe/Minsk", 
     class: 'BirthdayCheckWorker'
   )
 
