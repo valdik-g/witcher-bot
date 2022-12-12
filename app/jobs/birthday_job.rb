@@ -18,8 +18,7 @@ class BirthdayJob < ApplicationJob
         unless passport.bd.blank?
           day = (Date.today + 3).strftime('%d.%m')
           if "#{passport.bd.split('.')[0]}.#{passport.bd.split('.')[1]}" == day
-            # passports_to_send = Passport.all - [passport]
-            passports_to_send = [Passport.find_by(:nickname => "Анри Вил")]
+            passports_to_send = Passport.all - [passport]
             passports_to_send.each do |pass|
               bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id,
               text: "\xF0\x9F\x8E\x8A Через 3 дня день рождения у #{passport.nickname}" \
