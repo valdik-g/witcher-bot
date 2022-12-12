@@ -60,7 +60,8 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: "Списать занятия"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по игроку"),
-  Telegram::Bot::Types::KeyboardButton.new(text: "Информация по всем абонементам")
+  Telegram::Bot::Types::KeyboardButton.new(text: "Информация по всем абонементам"),
+
 ]
 
 admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
@@ -116,7 +117,7 @@ remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard:
 Telegram::Bot::Client.run(token) do |bot|
   Sidekiq::Cron::Job.create(
     name: "BirthdayCheck",
-    cron: "00 12 * * * Europe/Minsk", 
+    cron: "00 13 * * * Europe/Minsk", 
     class: 'BirthdayCheckWorker'
   )
 
