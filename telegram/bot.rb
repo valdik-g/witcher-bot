@@ -45,6 +45,8 @@ passport_id = nil
 
 update_field = ""
 
+options = ["Сб1", "Сб2", "Вс1", "Вс2"]
+
 cancel_mkb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
 ]
@@ -61,7 +63,7 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по игроку"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по всем абонементам"),
-
+  Telegram::Bot::Types::KeyboardButton.new(text: "Открыть предзапись")
 ]
 
 admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
@@ -123,6 +125,10 @@ Telegram::Bot::Client.run(token) do |bot|
 
   bot.listen do |message|
     case message
+    when Telegram::Bot::Types::PollAnswer
+      bot.api.send_message(chat_id: 612352098, text: "#{Passport.find(
+        User.find_by(:telegram_id => message.user.id).passport_id).nickname} записался(лась) на " \
+        "#{(message.option_ids.map { |l| options[l] }).join(" ")} в #{`date +'%H:%M %d.%m'`.chomp} ")
     when Telegram::Bot::Types::CallbackQuery
       case message.data
       when "inventory"
@@ -372,6 +378,9 @@ Telegram::Bot::Client.run(token) do |bot|
                   passports_message += "#{passport.nickname}: #{passport.subscription}\n" if passport.subscription.to_i < 1000
                 end
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
+              when 'Открыть предзапись'
+                bot.api.send_message(chat_id: message.chat.id, text: "Введите сообщение")
+                user.update(:step => "input_vote_message")
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
@@ -720,6 +729,16 @@ Telegram::Bot::Client.run(token) do |bot|
               Passport.find_by(:id => user.passport_id).update(update_field => value)
               reply_markup = user.admin ? admin_markup : remove_keyboard
               bot.api.send_message(chat_id: message.chat.id, text: "Значение обновлено", reply_markup: reply_markup)
+              user.update(:step => nil)
+            when "input_vote_message"
+              vote_message = message.text
+              passports = Passport.where("subscription > 1 and subscription < 100")
+              passports.map do |pass|
+                bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: vote_message)
+                bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
+                question: "Куда идем?", allows_multiple_answers: true, options: options,
+                is_anonymous: false)
+              end
               user.update(:step => nil)
             end
           end
