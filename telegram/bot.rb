@@ -327,7 +327,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.sendPhoto(chat_id: message.chat.id, photo: Faraday::UploadIO.new("/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'))
               when '/subscription', "\xF0\x9F\x92\xB3 Абонемент \xF0\x9F\x92\xB3"
                 unless user.passport_id.nil?
-                  if Passport.find_by(:id => user.passport_id).subscription.to_i> 1000
+                  if Passport.find_by(:id => user.passport_id).subscription.to_i >= 500
                     bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x8E\x89 Поздравляю! \xF0\x9F\x8E\x89\nТы блатной")
                   else
                     sale_markup_buttons = [
@@ -732,12 +732,14 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             when "input_vote_message"
               vote_message = message.text
-              passports = Passport.where("subscription > 1 and subscription < 100")
+              passports = Passport.where("subscription > 0 and subscription < 1000")
               passports.map do |pass|
-                bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: vote_message)
-                bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
-                question: "Куда идем?", allows_multiple_answers: true, options: options,
-                is_anonymous: false)
+                unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
+                  bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: vote_message)
+                  bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
+                  question: "Куда идем?", allows_multiple_answers: true, options: options,
+                  is_anonymous: false)
+                end
               end
               user.update(:step => nil)
             end
