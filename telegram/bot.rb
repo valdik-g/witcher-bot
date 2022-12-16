@@ -63,7 +63,8 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по игроку"),
   Telegram::Bot::Types::KeyboardButton.new(text: "Информация по всем абонементам"),
-  Telegram::Bot::Types::KeyboardButton.new(text: "Открыть предзапись")
+  Telegram::Bot::Types::KeyboardButton.new(text: "Открыть предзапись"),
+  Telegram::Bot::Types::KeyboardButton.new(text: "Закрыть предзапись")
 ]
 
 admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
@@ -71,6 +72,9 @@ admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb,
 passport_kb = [
   Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Получить инвентарь', callback_data: 'inventory')
 ]
+
+pre_recording_closed = false
+delete_message_ids = []
 
 passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: passport_kb)
 
@@ -126,16 +130,19 @@ Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     case message
     when Telegram::Bot::Types::PollAnswer
-      bot.api.send_message(chat_id: 612352098, text: "#{Passport.find(
-        User.find_by(:telegram_id => message.user.id).passport_id).nickname} записался(лась) на " \
-        "#{(message.option_ids.map { |l| options[l] }).join(" ")} в #{`date +'%H:%M %d.%m'`.chomp} ")
+      if pre_recording_closed
+        bot.api.send_message(chat_id: message.chat.id, text: "Предзапись уже закрыта, ждите дальнейших новостей")
+      else
+        bot.api.send_message(chat_id: 612352098, text: "#{Passport.find(
+          User.find_by(:telegram_id => message.user.id).passport_id).nickname} записался(лась) на " \
+          "#{(message.option_ids.map { |l| options[l] }).join(" ")} в #{`date +'%H:%M %d.%m'`.chomp} ")
+      end
     when Telegram::Bot::Types::CallbackQuery
       case message.data
       when "inventory"
         get_passport_kb = [
           Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Получить паспорт', callback_data: 'passport')
         ]
-        
         get_passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: get_passport_kb)
         user = find_or_build_user(message.from)
         passport = Passport.find_by(:id => user.passport_id)
@@ -379,8 +386,20 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
               when 'Открыть предзапись'
+                pre_recording_closed = false
                 bot.api.send_message(chat_id: message.chat.id, text: "Введите сообщение")
                 user.update(:step => "input_vote_message")
+              when 'Закрыть предзапись'
+                passports = Passport.where("subscription > 0 and subscription < 1000")
+                passports.map do |pass|
+                  unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
+                    bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: "Предзапись закрыта")
+                  end
+                end
+                delete_message_ids.each do |m|
+                  bot.api.delete_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, message_id: m)
+                end
+                pre_recording_closed = true
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
@@ -739,6 +758,11 @@ Telegram::Bot::Client.run(token) do |bot|
                   bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
                   question: "Куда идем?", allows_multiple_answers: true, options: options,
                   is_anonymous: false)
+                  
+                  # poll = bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
+                  # question: "Куда идем?", allows_multiple_answers: true, options: options,
+                  # is_anonymous: false)
+                  # delete_message_ids.push(poll.message_id)
                 end
               end
               user.update(:step => nil)
