@@ -138,9 +138,8 @@ Telegram::Bot::Client.run(token) do |bot|
             User.find_by(:telegram_id => message.user.id).passport_id).update(:days => message.option_ids.join(','))
         end
       else
-        @choosed_options = message.option_ids.map { |l| options[l.to_i]}t.first]
+        @choosed_options = message.option_ids.map { |l| options[l.to_i]}
         passports = Passport.where("subscription > 0 and subscription < 1000")
-        
         passports.map do |pass|
           unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
             bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: @vote_message)
@@ -179,7 +178,7 @@ Telegram::Bot::Client.run(token) do |bot|
           reply_markup: passport_markup)
       end
     when Telegram::Bot::Types::Message
-      # begin
+      begin
       user = find_or_build_user(message.from, message.chat.id)
           unless message.text.nil? && !message.text.empty? # && message.document.nil?
             case user.step
@@ -768,10 +767,10 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => nil)
             end
           end
-      # rescue
-      #   bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
-      #   user.update(:step => nil)
-      # end
+      rescue
+        bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
+        user.update(:step => nil)
+      end
     end
   end
 end
