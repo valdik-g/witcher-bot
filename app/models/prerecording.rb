@@ -1,0 +1,2 @@
+class Prerecording < ApplicationRecord
+end

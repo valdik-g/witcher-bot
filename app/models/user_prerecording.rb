@@ -1,0 +1,2 @@
+class UserPrerecording < ApplicationRecord
+end

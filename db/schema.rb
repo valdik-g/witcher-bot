@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_11_14_075803) do
+ActiveRecord::Schema[7.0].define(version: 2022_12_21_060629) do
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -59,9 +59,24 @@ ActiveRecord::Schema[7.0].define(version: 2022_11_14_075803) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "prerecordings", force: :cascade do |t|
+    t.boolean "closed", default: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "titles", force: :cascade do |t|
     t.string "title_name"
     t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "user_prerecordings", force: :cascade do |t|
+    t.integer "passport_id"
+    t.string "days", default: ""
+    t.integer "message_id"
+    t.boolean "voted", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

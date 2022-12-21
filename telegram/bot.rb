@@ -130,12 +130,28 @@ Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     case message
     when Telegram::Bot::Types::PollAnswer
-      if pre_recording_closed
-        bot.api.send_message(chat_id: message.chat.id, text: "Предзапись уже закрыта, ждите дальнейших новостей")
+      unless message.user.id == 612352098
+        if Prerecording.last.closed
+          bot.api.send_message(chat_id: message.user.id, text: "Предзапись уже закрыта, ждите дальнейших новостей")
+        else
+          UserPrerecording.find_by(:passport_id => 
+            User.find_by(:telegram_id => message.user.id).passport_id).update(:days => message.option_ids.join(','))
+        end
       else
-        bot.api.send_message(chat_id: 612352098, text: "#{Passport.find(
-          User.find_by(:telegram_id => message.user.id).passport_id).nickname} записался(лась) на " \
-          "#{(message.option_ids.map { |l| options[l] }).join(" ")} в #{`date +'%H:%M %d.%m'`.chomp} ")
+        @choosed_options = message.option_ids.map { |l| options[l.to_i]}t.first]
+        passports = Passport.where("subscription > 0 and subscription < 1000")
+        
+        passports.map do |pass|
+          unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
+            bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: @vote_message)
+            poll_message_id = bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
+            question: "Куда идем?", allows_multiple_answers: true, options: @choosed_options,
+            is_anonymous: false)
+            (UserPrerecording.find_by(:passport_id => 
+              pass.id) || UserPrerecording.create(:passport_id => pass.id))
+              .update(:message_id => poll_message_id)
+          end
+        end
       end
     when Telegram::Bot::Types::CallbackQuery
       case message.data
@@ -163,7 +179,7 @@ Telegram::Bot::Client.run(token) do |bot|
           reply_markup: passport_markup)
       end
     when Telegram::Bot::Types::Message
-      begin
+      # begin
       user = find_or_build_user(message.from, message.chat.id)
           unless message.text.nil? && !message.text.empty? # && message.document.nil?
             case user.step
@@ -289,25 +305,6 @@ Telegram::Bot::Client.run(token) do |bot|
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Ты как сюда залез?)")
                 end
-              # when "/switch", "\xE2\x9E\xA1 Переключить меню \xE2\x9E\xA1", "\xE2\xAC\x85 Переключить меню \xE2\xAC\x85"
-              #   if user.admin
-              #     admin_kb = [
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Создать паспорт"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Создать квест"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Создать титул"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Выполнить квест"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Назначить титул"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Изменить запись"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Списать занятия"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Получить паспорт игрока"),
-              #       Telegram::Bot::Types::KeyboardButton.new(text: "Получить информацию по абонементу"),
-              #     ]
-              #     admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
-              #     admin_markup = markup if message.text == "\xE2\xAC\x85 Переключить меню \xE2\xAC\x85"
-              #     bot.api.send_message(chat_id: message.chat.id, text: "Функционал переключен", reply_markup: admin_markup)
-              #   else
-              #     bot.api.send_message(chat_id: message.chat.id, text: "Кажется тебе еще рановато сюда, приходи, когда вырастешь и закалишься в боях \xE2\x9A\x94")
-              #   end
               when "/choose_title", "\xF0\x9F\x93\xAF Выбрать основной титул \xF0\x9F\x93\xAF"
                 titles = Passport.find_by(:id => user.passport_id).titles if user.passport_id
                 unless titles.nil?
@@ -386,20 +383,34 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
                 bot.api.send_message(chat_id: message.chat.id, text: passports_message)
               when 'Открыть предзапись'
-                pre_recording_closed = false
+                (Prerecording.last || Prerecording.create()).update(:closed => false)
                 bot.api.send_message(chat_id: message.chat.id, text: "Введите сообщение")
                 user.update(:step => "input_vote_message")
               when 'Закрыть предзапись'
+                Prerecording.last.update(:closed => true)
+                passports_message = ""
                 passports = Passport.where("subscription > 0 and subscription < 1000")
+                available_records = {}
+                @choosed_options.each { |l| available_records[l] = 10 }
                 passports.map do |pass|
                   unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
                     bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: "Предзапись закрыта")
+                    user_prerecording = UserPrerecording.find_by(:passport_id => pass.id)
+                    unless user_prerecording.days.empty?
+                      passports_message += "#{pass.nickname} записался на #{(UserPrerecording.find_by(:passport_id => pass.id).days.split(',').map do |l|
+                        available_records[@choosed_options[l.to_i]] -= 1
+                        @choosed_options[l.to_i]
+                      end).join(" ")}"
+                    end
+                    bot.api.send_message(chat_id: 612352098, text: passports_message) unless passports_message.empty?
+                    output_string = []
+                    available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
+                    bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n"\
+                    "#{output_string.join("\n")}") unless passports_message.empty?
                   end
                 end
-                delete_message_ids.each do |m|
-                  bot.api.delete_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, message_id: m)
-                end
-                pre_recording_closed = true
+                
+                UserPrerecording.update_all(:days => '', :message_id => nil)
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
@@ -481,7 +492,7 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => "input_level_reward")
             when 'input_level_reward'
               level_reward = message.text
-              bot.api.send_message(chat_id: message.chat.id, text: "Введите получаемый титул:")
+              bot.api.send_message(chat_id: message.chatavailable_recordsid, text: "Введите получаемый титул:")
               user.update(:step => "input_title_reward")
             when 'input_title_reward'
               title_reward = message.text
@@ -750,28 +761,17 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: "Значение обновлено", reply_markup: reply_markup)
               user.update(:step => nil)
             when "input_vote_message"
-              vote_message = message.text
-              passports = Passport.where("subscription > 0 and subscription < 1000")
-              passports.map do |pass|
-                unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
-                  bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: vote_message)
-                  bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
-                  question: "Куда идем?", allows_multiple_answers: true, options: options,
+              @vote_message = message.text
+              bot.api.send_poll(chat_id: message.chat.id, 
+                  question: "Какие тренировки планируются?", allows_multiple_answers: true, options: options,
                   is_anonymous: false)
-                  
-                  # poll = bot.api.send_poll(chat_id: User.find_by(:passport_id => pass.id).telegram_id, 
-                  # question: "Куда идем?", allows_multiple_answers: true, options: options,
-                  # is_anonymous: false)
-                  # delete_message_ids.push(poll.message_id)
-                end
-              end
               user.update(:step => nil)
             end
           end
-      rescue
-        bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
-        user.update(:step => nil)
-      end
+      # rescue
+      #   bot.api.send_message(chat_id: message.chat.id, text: "Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод")
+      #   user.update(:step => nil)
+      # end
     end
   end
 end
