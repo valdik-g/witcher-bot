@@ -70,7 +70,7 @@ admin_kb = [
 admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
 passport_kb = [
-  Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Получить инвентарь', callback_data: 'inventory')
+  Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Открыть инвентарь', callback_data: 'inventory')
 ]
 
 pre_recording_closed = false
@@ -136,6 +136,8 @@ Telegram::Bot::Client.run(token) do |bot|
         else
           UserPrerecording.find_by(:passport_id => 
             User.find_by(:telegram_id => message.user.id).passport_id).update(:days => message.option_ids.join(','))
+          # UserPrerecording.find_by(:passport_id => 
+          #   User.find_by(:telegram_id => message.user.id).passport_id).update(:days => message.option_ids.map { |l| options[l.to_i] })
         end
       else
         @choosed_options = message.option_ids.map { |l| options[l.to_i]}
@@ -156,7 +158,7 @@ Telegram::Bot::Client.run(token) do |bot|
       case message.data
       when "inventory"
         get_passport_kb = [
-          Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Получить паспорт', callback_data: 'passport')
+          Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Открыть паспорт', callback_data: 'passport')
         ]
         get_passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: get_passport_kb)
         user = find_or_build_user(message.from)
@@ -391,24 +393,37 @@ Telegram::Bot::Client.run(token) do |bot|
                 passports = Passport.where("subscription > 0 and subscription < 1000")
                 available_records = {}
                 @choosed_options.each { |l| available_records[l] = 10 }
-                passports.map do |pass|
-                  unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
-                    bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: "Предзапись закрыта")
-                    user_prerecording = UserPrerecording.find_by(:passport_id => pass.id)
-                    unless user_prerecording.days.empty?
-                      passports_message += "#{pass.nickname} записался на #{(UserPrerecording.find_by(:passport_id => pass.id).days.split(',').map do |l|
-                        available_records[@choosed_options[l.to_i]] -= 1
-                        @choosed_options[l.to_i]
-                      end).join(" ")}"
-                    end
-                    bot.api.send_message(chat_id: 612352098, text: passports_message) unless passports_message.empty?
-                    output_string = []
-                    available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
-                    bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n"\
-                    "#{output_string.join("\n")}") unless passports_message.empty?
-                  end
+                close_message = ""
+                @choosed_options.each_with_index do |option, i|
+                  close_message += "\n\n"
+                  option_prerecord = UserPrerecording.where("days LIKE ?", "%" + i + "%")
+                  option_prerecord.each { |prer| available_records[option] -= 1 }
+                  close_message += option + "\n\n" + (a.map do |pr|
+                    Passport.find(pr.passport_id).nickname
+                  end).join("\n")
                 end
-                
+                output_string = ""
+                available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
+                bot.api.send_message(chat_id: 612352098, text: close_message)
+                bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n"\
+                     "#{output_string.join("\n")}")
+                # passports.map do |pass|
+                #   unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
+                #     bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: "Предзапись закрыта")
+                #     user_prerecording = UserPrerecording.find_by(:passport_id => pass.id)
+                #     unless user_prerecording.days.empty?
+                #       passports_message += "#{pass.nickname} записался на #{(UserPrerecording.find_by(:passport_id => pass.id).days.split(',').map do |l|
+                #         available_records[@choosed_options[l.to_i]] -= 1
+                #         @choosed_options[l.to_i]
+                #       end).join(" ")}"
+                #     end
+                #     bot.api.send_message(chat_id: 612352098, text: passports_message) unless passports_message.empty?
+                #     output_string = []
+                #     available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
+                #     bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n"\
+                #     "#{output_string.join("\n")}") unless passports_message.empty?
+                #   end
+                # end  
                 UserPrerecording.update_all(:days => '', :message_id => nil)
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
