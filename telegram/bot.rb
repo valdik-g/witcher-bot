@@ -398,10 +398,10 @@ Telegram::Bot::Client.run(token) do |bot|
                 Prerecording.last.choosed_options.split(',').each_with_index do |option, i|
                   option_prerecord = UserPrerecording.where("days LIKE ?", "%#{i}%")
                   option_prerecord.each { |prer| available_records[option] -= 1 }
-                  close_message += option + "\n\n" + (option_prerecord.map { |pr| Passport.find(pr.passport_id).nickname}).join("\n")
+                  close_message += option + "\n\n" + (option_prerecord.map { |pr| Passport.find(pr.passport_id).nickname }).join("\n")
                   close_message += "\n\n"
                 end
-                UserPrerecording.all.each do { |pr| bot.api.send_message(
+                UserPrerecording.all.each { |pr| bot.api.send_message(
                   chat_id: User.find_by(:passport_id => pr.passport_id).telegram_id, text: 'Предзапись закрыта')}
                 output_string = ""
                 available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
