@@ -404,10 +404,9 @@ Telegram::Bot::Client.run(token) do |bot|
                 UserPrerecording.all.each { |pr| bot.api.send_message(
                   chat_id: User.find_by(:passport_id => pr.passport_id).telegram_id, text: 'Предзапись закрыта')}
                 output_string = ""
-                available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
+                available_records.each { |l| output_string += "#{l[0]}: #{l[1]}\n" }
                 bot.api.send_message(chat_id: 612352098, text: close_message)
-                bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n"\
-                     "#{output_string.join("\n")}")
+                bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n#{output_string}")
                 # passports.map do |pass|
                 #   unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
                 #     bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: "Предзапись закрыта")
