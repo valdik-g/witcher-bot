@@ -141,6 +141,7 @@ Telegram::Bot::Client.run(token) do |bot|
         end
       else
         @choosed_options = message.option_ids.map { |l| options[l.to_i]}
+        Prerecording.last.update(:choosed_options => (message.option_ids.map { |l| options[l.to_i]}).join(','))
         passports = Passport.where("subscription > 0 and subscription < 1000")
         passports.map do |pass|
           unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
@@ -389,19 +390,19 @@ Telegram::Bot::Client.run(token) do |bot|
                 user.update(:step => "input_vote_message")
               when 'Закрыть предзапись'
                 Prerecording.last.update(:closed => true)
-                passports_message = ""
-                passports = Passport.where("subscription > 0 and subscription < 1000")
                 available_records = {}
-                @choosed_options.each { |l| available_records[l] = 10 }
+                Prerecording.last.choosed_options.split(',') { |l| available_records[l] = 10 }
+                # @choosed_options.each { |l| available_records[l] = 10 }
                 close_message = ""
-                @choosed_options.each_with_index do |option, i|
-                  close_message += "\n\n"
-                  option_prerecord = UserPrerecording.where("days LIKE ?", "%" + i + "%")
+                # @choosed_options.each_with_index do |option, i|
+                Prerecording.last.choosed_options.split(',').each_with_index do |option, i|
+                  option_prerecord = UserPrerecording.where("days LIKE ?", "%#{i}%")
                   option_prerecord.each { |prer| available_records[option] -= 1 }
-                  close_message += option + "\n\n" + (a.map do |pr|
-                    Passport.find(pr.passport_id).nickname
-                  end).join("\n")
+                  close_message += option + "\n\n" + (option_prerecord.map { |pr| Passport.find(pr.passport_id).nickname}).join("\n")
+                  close_message += "\n\n"
                 end
+                UserPrerecording.all.each do { |pr| bot.api.send_message(
+                  chat_id: User.find_by(:passport_id => pr.passport_id).telegram_id, text: 'Предзапись закрыта')}
                 output_string = ""
                 available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
                 bot.api.send_message(chat_id: 612352098, text: close_message)
