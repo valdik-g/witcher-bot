@@ -434,9 +434,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 UserPrerecording.update_all(:days => '', :message_id => nil)
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
-                if user.telegram_id == 448768896 || user.telegram_id ==822281212
-                  reply_markup = hamon_kb
-                end
+                reply_markup = hamon_markup if user.telegram_id == 448768896
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
               when '/birthdays'
                 bot.api.send_message(chat_id: message.chat.id, text: "Список дней рождений на текущий месяц:")
@@ -813,8 +811,16 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => "input_descr_h")
             when "input_descr_h"
               description = message.text
-              change_passport_h.update(:description => description)
-              bot.api.send_message(chat_id: message.chat.id, text: "Описание изменено")
+              if user.telegram_id == 448768896 || user.telegram_id ==822281212
+                reply_markup = hamon_markup
+              end
+              if message.text == 'Отмена'
+                reply_markup = user.admin ? admin_markup : remove_keyboard
+                bot.api.send_message(chat_id: message.chat.id, text: "Описание не изменено", reply_markup: reply_markup)
+              else
+                change_passport_h.update(:description => description)
+                bot.api.send_message(chat_id: message.chat.id, text: "Описание изменено", reply_markup: reply_markup)
+              end
               user.update(:step => nil)
             end
           end
