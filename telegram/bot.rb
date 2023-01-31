@@ -438,10 +438,12 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
               when '/birthdays'
                 bot.api.send_message(chat_id: message.chat.id, text: "Список дней рождений на текущий месяц:")
+                birthday_message = ""
                 Passport.where("bd like '%.#{sprintf('%02i', DateTime.now.month)}%'").each do |passport| 
                   bd_array = passport.bd.split('.')
-                  bot.api.send_message(chat_id: message.chat.id, text: "#{passport.nickname}: #{bd_array[0]}.#{bd_array[1]}")
+                  birthday_message +=  "#{passport.nickname}: #{bd_array[0]}.#{bd_array[1]}\n"
                 end
+                  bot.api.send_message(chat_id: message.chat.id, text: birthday_message)
               when "Изменить описание"
                 passports = Passport.all
                 passports_message = ""
