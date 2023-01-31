@@ -42,6 +42,7 @@ field = nil
 field_array = []
 
 passport_id = nil
+change_passport_h = nil
 
 update_field = ""
 
@@ -72,6 +73,12 @@ admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb,
 passport_kb = [
   Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Открыть инвентарь', callback_data: 'inventory')
 ]
+
+hamon_kb = [
+  Telegram::Bot::Types::KeyboardButton.new(text: "Изменить описание")
+]
+
+hamon_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: hamon_kb, resize_keyboard: true)
 
 pre_recording_closed = false
 delete_message_ids = []
@@ -427,7 +434,25 @@ Telegram::Bot::Client.run(token) do |bot|
                 UserPrerecording.update_all(:days => '', :message_id => nil)
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
+                if user.telegram_id == 448768896 || user.telegram_id ==822281212
+                  reply_markup = hamon_kb
+                end
                 bot.api.send_message(chat_id: message.chat.id, text: "Кнопки убраны)", reply_markup:reply_markup)
+              when '/birthdays'
+                bot.api.send_message(chat_id: message.chat.id, text: "Список дней рождений на текущий месяц:")
+                Passport.where("bd like '%.#{sprintf('%02i', DateTime.now.month)}%'").each |passport| do
+                  bd_array = passport.bd.split('.')
+                  bot.api.send_message(chat_id: message.chat.id, text: "#{passport.nickname}: #{bd_array[0]}.#{bd_array[1]}")
+                end
+              when "Изменить описание"
+                passports = Passport.all
+                passports_message = ""
+                passports.map do |passport|
+                  passports_message += "#{passport.id}: #{passport.nickname}\n"
+                end
+                bot.api.send_message(chat_id: message.chat.id, text: "#{passports_message}")
+                bot.api.send_message(chat_id: message.chat.id, text: "Жги, выбирай кому поменять описание, вводи циферку")
+                user.update(:step => "input_descr_passport")
               end
             # when "input_meme"
             #   file_info = bot.api.getFile(file_id: message.document.file_id)
@@ -779,6 +804,17 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_poll(chat_id: message.chat.id, 
                   question: "Какие тренировки планируются?", allows_multiple_answers: true, options: options,
                   is_anonymous: false)
+              user.update(:step => nil)
+            when "input_descr_passport"
+              id = message.text.to_i
+              change_passport_h = Passport.find_by(:id => id)
+              bot.api.send_message(chat_id: message.chat.id, text: "Предыдущее описание: #{change_passport_h.description}\n" \
+              "Введите новое описание:", reply_markup: cancel_markup)
+              user.update(:step => "input_descr_h")
+            when "input_descr_h"
+              description = message.text
+              change_passport_h.update(:description => description)
+              bot.api.send_message(chat_id: message.chat.id, text: "Описание изменено")
               user.update(:step => nil)
             end
           end
