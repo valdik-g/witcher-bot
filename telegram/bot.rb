@@ -568,18 +568,14 @@ Telegram::Bot::Client.run(token) do |bot|
                   kvests_number.map do |number|
                     kvest = Kvest.find_by(:id => number)
                     if kvest
-                      unless passport.kvests.include? kvest
-                        new_crons = kvest.crons_reward + passport.crons
-                        new_level = kvest.level_reward + passport.level
-                        passport.update(:crons => new_crons, :level => new_level)
-                        passport.titles << Title.find_by(:id => kvest.title_id) unless kvest.title_id.nil?
-                        passport.update(:inventory =>  passport.inventory + kvest.additional_reward) if kvest.additional_reward != "Нет"
-                        passport.update(:inventory => passport.inventory + "\n") if kvest.additional_reward != "Нет"
-                        passport.kvests << kvest
-                        bot.api.send_message(chat_id: message.chat.id, text: "Квест #{kvest.kvest_name} успешно выполнен игроком #{passport.nickname}")
-                      else
-                        bot.api.send_message(chat_id: message.chat.id, text: "Квест #{kvest.kvest_name} уже добавлен #{passport.nickname}")
-                      end
+                      new_crons = kvest.crons_reward + passport.crons
+                      new_level = kvest.level_reward + passport.level
+                      passport.update(:crons => new_crons, :level => new_level)
+                      passport.titles << Title.find_by(:id => kvest.title_id) unless kvest.title_id.nil?
+                      passport.update(:inventory =>  passport.inventory + kvest.additional_reward) if kvest.additional_reward != "Нет"
+                      passport.update(:inventory => passport.inventory + "\n") if kvest.additional_reward != "Нет"
+                      passport.kvests << kvest
+                      bot.api.send_message(chat_id: message.chat.id, text: "Квест #{kvest.kvest_name} успешно выполнен игроком #{passport.nickname}")
                     end
                   end
                 end
