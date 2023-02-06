@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_12_21_060629) do
+ActiveRecord::Schema[7.0].define(version: 2023_01_26_072526) do
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -63,6 +63,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_12_21_060629) do
     t.boolean "closed", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "choosed_options", default: ""
   end
 
   create_table "titles", force: :cascade do |t|
