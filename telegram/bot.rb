@@ -80,10 +80,19 @@ hamon_kb = [
 
 hamon_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: hamon_kb, resize_keyboard: true)
 
+feedback_kb = [
+  Telegram::Bot::Types::KeyboardButton.new(text: "Анонимно"),
+  Telegram::Bot::Types::KeyboardButton.new(text: "Открыто")
+]
+
+feedback_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: feedback_kb, resize_keyboard: true)
+
 pre_recording_closed = false
 delete_message_ids = []
 
 passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: passport_kb)
+
+main_admins_ids = [822281212, 612352098]
 
 def find_or_build_user(user_obj, chat_id = nil)
   user = User.find_by(:telegram_id => user_obj.id)
@@ -109,11 +118,8 @@ def output_passport(passport_id, chat_id, bot)
   end
   kvests = "Кажется игрок еще не выполнил ни одного квеста!\n" if kvests.empty?
   title = ""
-  if passport.main_title_id.nil?
-    title = "Игрок еще не выбрал свой основной титул. Основной титул используется в сочетании с именем игрока, для вызова на турнир и в других ситуациях"
-  else
-    title = Title.find_by(:id => passport.main_title_id).title_name
-  end
+  passport.main_title_id.nil? title = "Отсутствует" : title = Title.find_by(:id => passport.main_title_id).title_name
+    title = "Отсутствует"
   inventory = passport.inventory.split(" ").join("\n")
   inventory += "\n" if passport.inventory.split(" ").length == 1
   passport_text = "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
@@ -412,25 +418,10 @@ Telegram::Bot::Client.run(token) do |bot|
                   chat_id: User.find_by(:passport_id => pr.passport_id).telegram_id, text: 'Предзапись закрыта')}
                 output_string = ""
                 available_records.each { |l| output_string += "#{l[0]}: #{l[1]}\n" }
-                bot.api.send_message(chat_id: 612352098, text: close_message)
-                bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n#{output_string}")
-                # passports.map do |pass|
-                #   unless User.find_by(:passport_id => pass.id).nil? || User.find_by(:passport_id => pass.id).telegram_id.nil?
-                #     bot.api.send_message(chat_id: User.find_by(:passport_id => pass.id).telegram_id, text: "Предзапись закрыта")
-                #     user_prerecording = UserPrerecording.find_by(:passport_id => pass.id)
-                #     unless user_prerecording.days.empty?
-                #       passports_message += "#{pass.nickname} записался на #{(UserPrerecording.find_by(:passport_id => pass.id).days.split(',').map do |l|
-                #         available_records[@choosed_options[l.to_i]] -= 1
-                #         @choosed_options[l.to_i]
-                #       end).join(" ")}"
-                #     end
-                #     bot.api.send_message(chat_id: 612352098, text: passports_message) unless passports_message.empty?
-                #     output_string = []
-                #     available_records.each { |l| output_string.push("#{l[0]}: #{l[1]}") }
-                #     bot.api.send_message(chat_id: 612352098, text: "Количество свободных мест:\n"\
-                #     "#{output_string.join("\n")}") unless passports_message.empty?
-                #   end
-                # end  
+                main_admins_ids.each do |id|
+                  bot.api.send_message(chat_id: id, text: close_message)
+                  bot.api.send_message(chat_id: id, text: "Количество свободных мест:\n#{output_string}")
+                end
                 UserPrerecording.update_all(:days => '', :message_id => nil)
               when '/remove'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
@@ -444,6 +435,12 @@ Telegram::Bot::Client.run(token) do |bot|
                   birthday_message +=  "#{passport.nickname}: #{bd_array[0]}.#{bd_array[1]}\n"
                 end
                   bot.api.send_message(chat_id: message.chat.id, text: birthday_message)
+              when '/feedback'
+                bot.api.send_message(chat_id: message.chat.id, 
+                  text: "Тут можно оставить свои отзывы и пожелания по нашему клубу, " \
+                  "пожелания по будующему функционалу бота, ну и так далее, "\
+                  "сообщение можно отправить как с подписью так и анонимно", reply_markup: feedback_markup)
+                user.update(:step => "choose_user_visibility")
               when "Изменить описание"
                 passports = Passport.all
                 passports_message = ""
@@ -781,7 +778,6 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
                 unless number in ["1", "2", "3"]
                   bot.api.send_message(chat_id: message.chat.id, text: "Введите новое значение для #{info_message}")
-                  p update_field
                   user.update(:step => "input_info_value")
                 else
                   bot.api.send_message(chat_id: message.chat.id, text: "Некорректный ввод, повторите команду")
@@ -809,9 +805,7 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(:step => "input_descr_h")
             when "input_descr_h"
               description = message.text
-              if user.telegram_id == 448768896 || user.telegram_id ==822281212
-                reply_markup = hamon_markup
-              end
+              reply_markup = hamon_markup if user.telegram_id == 448768896
               if message.text == 'Отмена'
                 reply_markup = user.admin ? admin_markup : remove_keyboard
                 bot.api.send_message(chat_id: message.chat.id, text: "Описание не изменено", reply_markup: reply_markup)
@@ -819,6 +813,21 @@ Telegram::Bot::Client.run(token) do |bot|
                 change_passport_h.update(:description => description)
                 bot.api.send_message(chat_id: message.chat.id, text: "Описание изменено", reply_markup: reply_markup)
               end
+              user.update(:step => nil)
+            when 'get_status'
+              status = message.text
+              bot.api.send_message(chat_id: message.chat.id, text: "Описание изменено", reply_markup: reply_markup)
+            when 'choose_user_visibility'
+              @send_feedbacks_author = message.text
+              bot.api.send_message(chat_id: message.chat.id, text: "Введите ваш отзыв", reply_markup: reply_markup)
+              user.update(:step => 'enter_feedback')
+            when 'enter_feedback'
+              feedback = message.text
+              main_admins_ids.each do |id|
+                feedback += "\n\n#{Passport.find_by(:id => user.passport_id)}" if @send_feedbacks_author == 'Открыто' 
+                bot.api.send_message(chat_id: id, text: feedback)
+              end
+              bot.api.send_message(chat_id: message.chat.id, text: 'Отзыв отправлен')
               user.update(:step => nil)
             end
           end
