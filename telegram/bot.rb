@@ -118,8 +118,11 @@ def output_passport(passport_id, chat_id, bot)
   end
   kvests = "Кажется игрок еще не выполнил ни одного квеста!\n" if kvests.empty?
   title = ""
-  passport.main_title_id.nil? title = "Отсутствует" : title = Title.find_by(:id => passport.main_title_id).title_name
+  if passport.main_title_id.nil? 
     title = "Отсутствует"
+  else
+    title = Title.find_by(:id => passport.main_title_id).title_name
+  end
   inventory = passport.inventory.split(" ").join("\n")
   inventory += "\n" if passport.inventory.split(" ").length == 1
   passport_text = "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl
