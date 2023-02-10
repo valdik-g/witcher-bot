@@ -87,7 +87,7 @@ feedback_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: feedba
 
 passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: passport_kb)
 
-main_admins_ids = [822_281_212] # , 612_352_098
+main_admins_ids = [822_281_212, 612_352_098]
 
 def find_or_build_user(user_obj, _chat_id = nil)
   user = User.find_by(telegram_id: user_obj.id)
