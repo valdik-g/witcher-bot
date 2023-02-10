@@ -44,7 +44,7 @@ change_passport_h = nil
 
 update_field = ''
 
-options = %w[Сб1 Сб2 Вс1 Вс2]
+options = %w[Сб1 Сб2 Вс0 Вс1 Вс2]
 
 cancel_mkb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
