@@ -106,7 +106,7 @@ def output_passport(passport_id, chat_id, _bot)
   end
   long_kvest_record = Kvest.find_by(id: passport.long_kvest_id)
   long_kvest = 'Нет'
-  long_kvest = Kvest.find_by(id: passport.long_kvest_id).kvest_name if long_kvest_record
+  long_kvest = long_kvest_record.kvest_name if long_kvest_record
   additional_kvest = ''
   additional_kvest += "Свиток задания #{passport.additional_kvest} штук(и)\n" unless passport.additional_kvest.zero?
   kvests = "Кажется игрок еще не выполнил ни одного квеста!\n" if kvests.empty?
@@ -504,27 +504,28 @@ Telegram::Bot::Client.run(token) do |bot|
             user.update(step: 'input_school')
           when 'input_school'
             school = message.text
-            bot.api.send_message(chat_id: message.chat.id, text: 'Введите ранг')
-            user.update(step: 'input_rank')
-          when 'input_rank'
-            rank = message.text
-            bot.api.send_message(chat_id: message.chat.id,
-                                 text: 'Есть ли у будующего ведьмака доп квест(Введите количество, 0 если их нет):')
-            user.update(step: 'input_additional_kvest')
-          when 'input_additional_kvest'
-            additional_kvest_info = message.text.downcase
-            additional_kvest = true if yes.include?(additional_kvest_info)
-            bot.api.send_message(chat_id: message.chat.id, text: 'Введите эликсиры (Нет если эликсиры отстутствуют):')
-            user.update(step: 'input_elixirs')
-          when 'input_elixirs'
-            elixirs = message.text
-            bot.api.send_message(chat_id: message.chat.id, text: 'Введите описание:')
-            user.update(step: 'input_description')
-          when 'input_description'
-            description = message.text
-            passport = Passport.create(nickname: witcher_name, crons: crons, school: school,
-                                       level: level, rank: rank, additional_kvest: additional_kvest, description: description,
-                                       elixirs: elixirs)
+            passport = Passport.create(nickname: witcher_name, crons: 0, school: school,
+              level: 0, rank: 'Рекрут', additional_kvest: 0, description: 'Отсутствует',
+              elixirs: 'Нет')
+          #  bot.api.send_message(chat_id: message.chat.id, text: 'Введите ранг')
+          #  user.update(step: 'nil')
+          # when 'input_rank'
+          #   rank = message.text
+          #   bot.api.send_message(chat_id: message.chat.id,
+          #                        text: 'Есть ли у будующего ведьмака доп квест(Введите количество, 0 если их нет):')
+          #   user.update(step: 'input_additional_kvest')
+          # when 'input_additional_kvest'
+          #   additional_kvest_info = message.text.downcase
+          #   additional_kvest = 0 if yes.include?(additional_kvest_info)
+          #   bot.api.send_message(chat_id: message.chat.id, text: 'Введите эликсиры (Нет если эликсиры отстутствуют):')
+          #   user.update(step: 'input_elixirs')
+          # when 'input_elixirs'
+          #   elixirs = message.text
+          #   bot.api.send_message(chat_id: message.chat.id, text: 'Введите описание:')
+          #   user.update(step: 'input_description')
+          # when 'input_description'
+          #  description = message.text
+            
             bot.api.send_message(chat_id: message.chat.id, text: 'Введите ник пользователя в телеграмм')
             user.update(step: 'input_telegram_nick')
           when 'input_telegram_nick'
