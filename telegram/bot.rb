@@ -551,7 +551,7 @@ Telegram::Bot::Client.run(token) do |bot|
             user.update(step: 'input_level_reward')
           when 'input_level_reward'
             level_reward = message.text
-            bot.api.send_message(chat_id: message.chatavailable_recordsid, text: 'Введите получаемый титул:')
+            bot.api.send_message(chat_id: message.chat.id, text: 'Введите получаемый титул:')
             user.update(step: 'input_title_reward')
           when 'input_title_reward'
             title_reward = message.text
