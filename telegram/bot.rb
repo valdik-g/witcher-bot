@@ -844,7 +844,7 @@ Telegram::Bot::Client.run(token) do |bot|
             user.update(step: nil)
           when 'input_notification'
             notification = message.text
-            User.each { |user| bot.api.send_message(chat_id: user.telegram_id, text: notification) }
+            User.all.each { |user| bot.api.send_message(chat_id: user.telegram_id, text: notification) }
             return_buttons(user, bot, message.chat.id, 'Сообщение отправлено')
             user.update(step: nil)
           end
