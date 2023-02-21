@@ -66,7 +66,8 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Информация по игроку'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Информация по всем абонементам'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Списать кроны'),
-  Telegram::Bot::Types::KeyboardButton.new(text: 'Поднять ранг'),
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Повысить ранг'),
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Уведомление'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Открыть предзапись'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Закрыть предзапись')
 ]
@@ -441,10 +442,13 @@ Telegram::Bot::Client.run(token) do |bot|
               output_all_passports(bot, message.chat.id)
               bot.api.send_message(chat_id: message.chat.id, text: 'Выберите того, кому необходимо начислить занятия', reply_markup: cancel_markup)
               user.update(step: 'input_subscription_addition')
-            when 'Поднять ранг'
+            when 'Повысить ранг'
               output_all_passports(bot, message.chat.id)
               bot.api.send_message(chat_id: message.chat.id, text: 'Выберите того, кому необходимо поднять ранг', reply_markup: cancel_markup)
               user.update(step: 'input_passport_rank')
+            when 'Уведомление'
+              bot.api.send_message(chat_id: message.chat.id, text: 'Введите уведомление', reply_markup: cancel_markup)
+              user.update(step: 'input_notification')
             when '/remove'
               reply_markup = user.admin ? @admin_markup : @remove_keyboard
               reply_markup = @hamon_markup if user.telegram_id == 448_768_896
@@ -837,6 +841,11 @@ Telegram::Bot::Client.run(token) do |bot|
             return_buttons(user, bot, message.chat.id, 'Ранг повышен')
             bot.api.send_message(chat_id: User.find_by(:passport_id => passport.id).telegram_id,
                                  text: "Поздравляем, ваш ранг повышен до #{@ranks[next_rank]}")
+            user.update(step: nil)
+          when 'input_notification'
+            notification = message.text
+            User.each { |user| bot.api.send_message(chat_id: user.telegram_id, text: notification) }
+            return_buttons(user, bot, message.chat.id, 'Сообщение отправлено')
             user.update(step: nil)
           end
         end
