@@ -240,7 +240,7 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id,
                                    text: output_passport(passport.id, message.chat.id, bot), reply_markup: passport_markup)
               bot.api.send_message(chat_id: message.chat.id,
-                                    text: "Все верно, он лучший \xEE\x80\xA2")
+                                    text: "Все верно, он лучший \xE2\x9D\xA4")
             when '/get_history', "\xF0\x9F\x97\xBF Получить историю персонажа \xF0\x9F\x97\xBF"
               if user.passport_id.nil?
                 bot.api.send_message(chat_id: message.chat.id,
