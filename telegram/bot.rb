@@ -84,6 +84,11 @@ hamon_kb = [
 
 @hamon_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: hamon_kb, resize_keyboard: true)
 
+get_passport_kb = [
+  Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Открыть паспорт', callback_data: 'passport')
+]
+get_passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: get_passport_kb)
+
 feedback_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Анонимно'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Открыто'),
@@ -107,7 +112,8 @@ def find_or_build_user(user_obj, _chat_id = nil)
   user || User.create(telegram_id: user_obj.id, username: username)
 end
 
-def output_passport(passport_id, chat_id, _bot)
+def output_passport(passport_id, chat_id)
+  @inventory_pass_id = passport_id
   passport = Passport.find_by(id: passport_id)
   kvests = ''
   passport.kvests.map do |kvest|
@@ -180,17 +186,13 @@ Telegram::Bot::Client.run(token) do |bot|
     when Telegram::Bot::Types::CallbackQuery
       case message.data
       when 'inventory'
-        get_passport_kb = [
-          Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Открыть паспорт', callback_data: 'passport')
-        ]
-        get_passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: get_passport_kb)
         user = find_or_build_user(message.from)
-        passport = Passport.find_by(id: user.passport_id)
+        passport = Passport.find(@inventory_pass_id) 
         inventory = passport.inventory
         inventory += "\n" unless passport.inventory.split("\n").empty?
         additional_kvest = ''
         unless passport.additional_kvest.zero?
-          additional_kvest = "\xF0\x9F\x8E\x9F\xEF\xB8\x8F Специальные предметы:\nСвиток задания #{passport.additional_kvest} штук(и)\n\n"
+          additional_kvest = "\xF0\x9F\x8E\x9F\xEF\xB8\x8F Специальные предметы:\nСвиток дополнительного квеста #{passport.additional_kvest} штук(и)\n\n"
         end
         bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
                                   text: "\xF0\x9F\x8E\x92 СУМКА:\n#{inventory}"\
@@ -201,7 +203,7 @@ Telegram::Bot::Client.run(token) do |bot|
       when 'passport'
         user = find_or_build_user(message.from)
         bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
-                                  text: output_passport(user.passport_id, user.telegram_id, bot),
+                                  text: output_passport(Passport.find(@inventory_pass_id), user.telegram_id),
                                   reply_markup: passport_markup)
       end
     when Telegram::Bot::Types::Message
@@ -230,20 +232,20 @@ Telegram::Bot::Client.run(token) do |bot|
                   bot.api.send_message(chat_id: message.chat.id,
                                        text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
                 end
-              elsif Passport.find(user.passport_id).bd.empty?
+              elsif user.passport.bd.empty?
                 user.update(step: 'input_bd')
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: "Мы нашли ваш паспорт, однако предварительно нужно собрать немного ифнормации о вас\nВведите дату рождения(формат 03.09):")
               else
                 bot.api.send_message(chat_id: message.chat.id,
-                                     text: output_passport(user.passport_id, message.chat.id, bot), reply_markup: passport_markup)
+                                     text: output_passport(user.passport_id, message.chat.id), reply_markup: passport_markup)
               end
             when '/get_best', "\xF0\x9F\x94\x9D Получить паспорт лучшего игрока \xF0\x9F\x94\x9D"
-              Passport.order('level DESC, crons DESC').first
+              passport = Passport.order('level DESC, crons DESC').first
               bot.api.send_message(chat_id: message.chat.id,
                                    text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
               bot.api.send_message(chat_id: message.chat.id,
-                                   text: output_passport(passport.id, message.chat.id, bot), reply_markup: passport_markup)
+                                   text: output_passport(passport.id, message.chat.id), reply_markup: passport_markup)
               bot.api.send_message(chat_id: message.chat.id,
                                     text: "А все, моя очередь)")
             when '/get_history', "\xF0\x9F\x97\xBF Получить историю персонажа \xF0\x9F\x97\xBF"
@@ -251,7 +253,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: 'Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт')
               else
-                history = Passport.find_by(id: user.passport_id).history
+                history = user.passport.history
                 history = 'История вашего персонажа пуста' if history.empty?
                 bot.api.send_message(chat_id: message.chat.id, text: history)
               end
@@ -260,7 +262,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: 'Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт')
               else
-                history = Passport.find_by(id: user.passport_id).history
+                history = user.passport.history
                 if history.empty?
                   history = "История вашего персонажа пуста, самое время это исправить!\nВведите историю вашего персонажа"
                 end
@@ -274,7 +276,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: 'Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт')
               else
-                kvests = Passport.find_by(id: user.passport_id).kvests
+                kvests = user.passport.kvests
                 message_kvests = "Выполненные квесты:\n\n"
                 kvests.each do |kvest|
                   message_kvests += "#{kvest['kvest_name']}\n"
@@ -286,7 +288,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: 'Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт')
               else
-                passport = Passport.find_by(id: user.passport_id)
+                passport = user.passport
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: "Личная информация:\n1. Дата рождения: #{passport.bd}\n2. Почта: #{passport.mail}\n3. Телефон: #{passport.number}")
                 bot.api.send_message(chat_id: message.chat.id,
@@ -344,7 +346,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
               end
             when '/choose_title', "\xF0\x9F\x93\xAF Выбрать основной титул \xF0\x9F\x93\xAF"
-              titles = Passport.find_by(id: user.passport_id).titles if user.passport_id
+              titles = user.passport.titles if user.passport_id
               if titles.nil?
                 bot.api.send_message(chat_id: message.chat.id, text: 'Похоже у вас нет титулов')
               else
@@ -371,7 +373,7 @@ Telegram::Bot::Client.run(token) do |bot|
               if user.passport_id.nil?
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: 'Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт')
-              elsif Passport.find_by(id: user.passport_id).subscription.to_i >= 500
+              elsif user.passport.subscription.to_i >= 500
                 bot.api.send_message(chat_id: message.chat.id,
                                      text: "\xF0\x9F\x8E\x89 Поздравляю! \xF0\x9F\x8E\x89\nТы блатной")
               else
@@ -379,11 +381,11 @@ Telegram::Bot::Client.run(token) do |bot|
                   Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Хочу 30%', url: 'tg://user?id=612352098')
                 ]
                 sale_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: sale_markup_buttons)
-                subscription = Passport.find_by(id: user.passport_id).subscription
-                debt = Passport.find_by(id: user.passport_id).debt
+                subscription = user.passport.subscription
+                debt = user.passport.debt
                 subs_message = "\xF0\x9F\x92\xB3 Абонемент: "
-                if subscription.positive?
-                  subs_message += "Осталось #{Passport.find_by(id: user.passport_id).subscription} посещений(я)"
+                if subscription != 0
+                  subs_message += "Осталось #{subscription} посещений(я)"
                 else
                   subs_message += "Кажется у вас нет абонемента.\n Внизу есть кнопочка чтобы получить скидку в 30%, только \xF0\x9F\xA4\xAB"
                 end
@@ -500,7 +502,7 @@ Telegram::Bot::Client.run(token) do |bot|
             user.update(step: nil)
           when 'change_user_description'
             description = message.text
-            Passport.find_by(user_id: user.passport_id).update(description: description)
+            user.passport.update(description: description)
             bot.api.send_message(chat_id: message.chat.id, text: 'Описание успешно обновлено')
             user.update(step: nil)
           when 'input_kvest_name'
@@ -581,9 +583,8 @@ Telegram::Bot::Client.run(token) do |bot|
             user.update(step: nil)
           when 'change_history'
             history = message.text
-            passport = Passport.find_by(id: user.passport_id).update(history: history)
-            reply_markup = user.admin ? @admin_markup : @remove_keyboard
-            bot.api.send_message(chat_id: message.chat.id, text: 'История обновлена', reply_markup: reply_markup)
+            user.passport.update(history: history)
+            return_buttons(user, bot, message.chat.id, 'История обновлена')
             user.update(step: nil)
           when 'update_field'
             bot.api.send_message(chat_id: message.chat.id, text: 'Выберите запись для изменения')
@@ -678,7 +679,7 @@ Telegram::Bot::Client.run(token) do |bot|
             if Title.find_by(id: id).nil?
               bot.api.send_message(chat_id: message.chat.id, text: 'Неверный ввод, повторите команду снова')
             else
-              Passport.find_by(id: user.passport_id).update(main_title_id: id)
+              user.passport.update(main_title_id: id)
               bot.api.send_message(chat_id: message.chat.id, text: 'Основной титул установлен')
             end
             user.update(step: nil)
@@ -703,26 +704,26 @@ Telegram::Bot::Client.run(token) do |bot|
             user.update(step: nil)
           when 'input_bd'
             bd = message.text
-            Passport.find_by(id: user.passport_id).update(bd: bd)
+            user.passport.update(bd: bd)
             user.update(step: 'input_mail')
             bot.api.send_message(chat_id: message.chat.id, text: 'Введите адрес электронной почты:')
           when 'input_mail'
             mail = message.text
-            Passport.find_by(id: user.passport_id).update(mail: mail)
+            user.passport.update(mail: mail)
             user.update(step: 'input_number')
             bot.api.send_message(chat_id: message.chat.id, text: 'Введите номер:')
           when 'input_number'
             number = message.text
-            Passport.find_by(id: user.passport_id).update(number: number)
+            user.passport.update(number: number)
             bot.api.send_message(chat_id: message.chat.id,
-                                 text: output_passport(user.passport_id, message.chat.id, bot), reply_markup: passport_markup)
+                                 text: output_passport(user.passport_id, message.chat.id), reply_markup: passport_markup)
             user.update(step: nil)
           when 'input_player_passport_number'
             number = message.text
             if Passport.find_by(id: number).nil?
               bot.api.send_message(chat_id: message.chat.id, text: 'Некорректный ввод, повторите команду')
             else
-              bot.api.send_message(chat_id: message.chat.id, text: output_passport(number, message.chat.id, bot),
+              bot.api.send_message(chat_id: message.chat.id, text: output_passport(number, message.chat.id),
                                    reply_markup: passport_markup)
             end
             user.update(step: nil)
@@ -761,7 +762,7 @@ Telegram::Bot::Client.run(token) do |bot|
             end
           when 'input_info_value'
             value = message.text
-            Passport.find_by(id: user.passport_id).update(update_field => value)
+            user.passport.update(update_field => value)
             return_buttons(user, bot, message.chat.id, 'Значение обновлено')
             user.update(step: nil)
           when 'input_vote_message'
@@ -789,7 +790,7 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'enter_feedback'
             main_admins_ids.each do |id|
               if @send_feedbacks_author == 'Открыто'
-                feedback = "Отзыв от #{Passport.find_by(id: user.passport_id).nickname}:\n\n"
+                feedback = "Отзыв от #{user.passport.nickname}:\n\n"
               else
                 feedback = "Отзыв от кого-то, кто пожелал остаться во мраке ночи:\n\n"
               end
