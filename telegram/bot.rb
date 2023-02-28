@@ -113,7 +113,6 @@ def find_or_build_user(user_obj, _chat_id = nil)
 end
 
 def output_passport(passport_id, chat_id)
-  @inventory_pass_id = passport_id
   passport = Passport.find_by(id: passport_id)
   kvests = ''
   passport.kvests.map do |kvest|
@@ -187,7 +186,7 @@ Telegram::Bot::Client.run(token) do |bot|
       case message.data
       when 'inventory'
         user = find_or_build_user(message.from)
-        passport = Passport.find(@inventory_pass_id) 
+        passport = user.passport #Passport.find(@inventory_pass_id) 
         inventory = passport.inventory
         inventory += "\n" unless passport.inventory.split("\n").empty?
         additional_kvest = ''
@@ -201,9 +200,10 @@ Telegram::Bot::Client.run(token) do |bot|
                                                                                                      end}",
                                   reply_markup: get_passport_markup)
       when 'passport'
+        p message
         user = find_or_build_user(message.from)
         bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
-                                  text: output_passport(Passport.find(@inventory_pass_id), user.telegram_id),
+                                  text: output_passport(user.passport, user.telegram_id), # Passport.find(@inventory_pass_id)
                                   reply_markup: passport_markup)
       end
     when Telegram::Bot::Types::Message
