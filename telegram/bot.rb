@@ -243,7 +243,7 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id,
                                    text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
               bot.api.send_message(chat_id: message.chat.id,
-                                   text: output_passport(passport.id, message.chat.id), reply_markup: passport_markup)
+                                   text: output_passport(passport.id, message.chat.id))
             when '/get_history'
               if user.passport_id.nil?
                 bot.api.send_message(chat_id: message.chat.id,
