@@ -718,10 +718,9 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'input_player_passport_number'
             number = message.text
             if Passport.find_by(id: number).nil?
-              bot.api.send_message(chat_id: message.chat.id, text: 'Некорректный ввод, повторите команду')
+              return_buttons(user, bot, message.chat.id, 'Некорректный ввод, повторите команду')
             else
-              bot.api.send_message(chat_id: message.chat.id, text: output_passport(number, message.chat.id),
-                                   reply_markup: passport_markup)
+              return_buttons(user, bot, message.chat.id, output_passport(number, message.chat.id))
             end
             user.update(step: nil)
           when 'input_abon_info'
