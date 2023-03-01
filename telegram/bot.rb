@@ -62,7 +62,6 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Изменить запись'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Списать занятия'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Начислить занятия'),
-  Telegram::Bot::Types::KeyboardButton.new(text: 'Получить паспорт игрока'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Информация по игроку'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Информация по всем абонементам'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Списать кроны'),
@@ -358,7 +357,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: 'Выберите основной титул, вводите цифрой', reply_markup: cancel_markup)
                 user.update(step: 'input_main_title')
               end
-            when '/get_best_players', 'Получить паспорт игрока'
+            when '/get_player'
               output_all_passports(bot, message.chat.id)
               user.update(step: 'input_player_passport_number')
             when '/mem', "\xF0\x9F\xA4\xA1 Мемчик \xF0\x9F\xA4\xA1"
