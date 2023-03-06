@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_01_26_072526) do
+ActiveRecord::Schema[7.0].define(version: 2023_03_01_095648) do
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -33,7 +33,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_01_26_072526) do
     t.integer "crons"
     t.string "description"
     t.string "school"
-    t.integer "level"
+    t.string "level"
     t.string "rank"
     t.integer "additional_kvest", default: 0
     t.datetime "created_at", null: false

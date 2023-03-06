@@ -460,11 +460,15 @@ Telegram::Bot::Client.run(token) do |bot|
               reply_markup = @hamon_markup if user.telegram_id == 448_768_896
               bot.api.send_message(chat_id: message.chat.id, text: 'Кнопки убраны)', reply_markup: reply_markup)
             when '/birthdays'
-              bot.api.send_message(chat_id: message.chat.id, text: 'Список дней рождений на текущий месяц:')
+              bot.api.send_message(chat_id: message.chat.id, text: 'Список дней рождений на следующие сорок дней:')
               birthday_message = ''
-              Passport.where("bd like '%.#{format('%02i', DateTime.now.month)}%'").each do |passport|
-                bd_array = passport.bd.split('.')
-                birthday_message += "#{passport.nickname}: #{bd_array[0]}.#{bd_array[1]}\n"
+              Passport.all.select(:nickname, :bd).sort_by { |pass| pass.bd.split('.').reverse.join('.')}.each do |pass|
+                unless pass.bd.blank?
+                  bd = pass.bd.split('.')
+                  if (bd[0] > format('%02i', DateTime.now.day) && bd[1] == format('%02i', DateTime.now.month)) || (bd[0] < format('%02i', (DateTime.now + 40).day) && bd[1] == format('%02i', (DateTime.now + 40).month))
+                    birthday_message += "#{pass.nickname}: #{bd[0]}.#{bd[1]}\n"
+                  end
+                end
               end
               bot.api.send_message(chat_id: message.chat.id, text: birthday_message)
             when '/feedback'
