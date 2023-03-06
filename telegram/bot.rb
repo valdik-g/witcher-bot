@@ -558,7 +558,7 @@ Telegram::Bot::Client.run(token) do |bot|
                 next unless kvest
 
                 new_crons = kvest.crons_reward + passport.crons
-                new_level = kvest.level_reward + passport.level
+                new_level = (kvest.level_reward + passport.level.to_i).to_s
                 passport.update(crons: new_crons, level: new_level)
                 passport.titles << Title.find_by(id: kvest.title_id) unless kvest.title_id.nil?
                 if kvest.additional_reward != 'Нет'
