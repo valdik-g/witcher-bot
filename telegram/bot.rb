@@ -253,7 +253,7 @@ Telegram::Bot::Client.run(token) do |bot|
                                      text: output_passport(user.passport_id, message.chat.id), reply_markup: passport_markup)
               end
             when '/get_best'
-              passport = Passport.order('CAST(level as integer) DESC').first
+              passport = Passport.order(Arel.sql('CAST(level as integer) DESC')).first
               bot.api.send_message(chat_id: message.chat.id,
                                    text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
               bot.api.send_message(chat_id: message.chat.id,
