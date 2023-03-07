@@ -854,7 +854,7 @@ Telegram::Bot::Client.run(token) do |bot|
             bot.api.send_message(chat_id: message.chat.id, text: 'Сколько?', reply_markup: cancel_markup)
             user.update(step: 'input_reward_count')
           when 'input_reward_count'
-            bot.api.send_message(chat_id: message.chat.id, text: 'Еще награды?', reply_markup: )
+            bot.api.send_message(chat_id: message.chat.id, text: 'Еще награды?', reply_markup: @reward_types_markup)
             user.update(step: nil)
           end
         end
