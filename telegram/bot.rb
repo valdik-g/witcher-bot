@@ -67,9 +67,23 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Списать кроны'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Повысить ранг'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Уведомление'),
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Провести турнир'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Открыть предзапись'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Закрыть предзапись')
 ]
+
+yes_no_kb = [
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Да'),
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Нет')
+]
+
+reward_types_kb = [
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Кроны'),
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Свитки повтора'),
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Свитки доп квеста')
+]
+
+@reward_types_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
 @admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
@@ -239,7 +253,7 @@ Telegram::Bot::Client.run(token) do |bot|
                                      text: output_passport(user.passport_id, message.chat.id), reply_markup: passport_markup)
               end
             when '/get_best'
-              passport = Passport.order('level DESC, crons DESC').first
+              passport = Passport.order('CAST(level as integer) DESC').first
               bot.api.send_message(chat_id: message.chat.id,
                                    text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
               bot.api.send_message(chat_id: message.chat.id,
@@ -411,6 +425,9 @@ Telegram::Bot::Client.run(token) do |bot|
                 end
               end
               bot.api.send_message(chat_id: message.chat.id, text: passports_message)
+            when 'Провести турнир'
+              bot.api.send_message(chat_id: message.chat.id, text: 'Введите тип награды', reply_markup: cancel_markup)
+              user.update(step: 'input_tournament_reward_type')
             when 'Открыть предзапись'
               (Prerecording.last || Prerecording.create).update(closed: false)
               bot.api.send_message(chat_id: message.chat.id, text: 'Введите сообщение', reply_markup: cancel_markup)
@@ -499,12 +516,12 @@ Telegram::Bot::Client.run(token) do |bot|
             passport.update(telegram_nick: telegram_nick)
             update_user = User.find_by(username: telegram_nick)
             update_user&.update(passport_id: passport.id)
-            bot.api.send_message(chat_id: message.chat.id, text: 'Запись создана')
+            return_buttons(user, bot, message.chat.id, 'Запись создана')
             user.update(step: nil)
           when 'change_user_description'
             description = message.text
             user.passport.update(description: description)
-            bot.api.send_message(chat_id: message.chat.id, text: 'Описание успешно обновлено')
+            return_buttons(user, bot, message.chat.id, 'Описание успешно обновлено')
             user.update(step: nil)
           when 'input_kvest_name'
             kvest_name = message.text
@@ -533,7 +550,7 @@ Telegram::Bot::Client.run(token) do |bot|
             title_reward_kvest = Title.find_by(title_name: title_reward).id unless title_reward == 'Нет'
             kvest = Kvest.create!(kvest_name: kvest_name, crons_reward: crons_reward, level_reward: level_reward, title_id: title_reward_kvest,
                                   additional_reward: additional_reward)
-            bot.api.send_message(chat_id: message.chat.id, text: 'Квест успешно создан')
+            return_buttons(user, bot, message.chat.id, 'Квест успешно создан')
             user.update(step: nil)
           when 'input_passport_number'
             passport_number = message.text
@@ -572,6 +589,7 @@ Telegram::Bot::Client.run(token) do |bot|
                                      text: "Поздравляем, ваш уровень повышен до #{passport.level}")
               end
             end
+            return_buttons(user, bot, message.chat.id, 'Квесты проставлены игрокам')
             user.update(step: nil)
           when 'input_title_name'
             title_name = message.text
@@ -580,7 +598,7 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'input_title_description'
             title_description = message.text
             Title.create(title_name: title_name, description: title_description)
-            bot.api.send_message(chat_id: message.chat.id, text: "Титул #{title_name} создан")
+            return_buttons(user, bot, message.chat.id, "Титул #{title_name} создан")
             user.update(step: nil)
           when 'change_history'
             history = message.text
@@ -618,7 +636,7 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: titles_message)
               active_table = Title
             else
-              bot.api.send_message(chat_id: message.chat.id, text: 'Неверный ввод, повторите команду снова')
+              return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
               user.update(step: nil)
             end
             user.update(step: 'choose_record')
@@ -627,7 +645,7 @@ Telegram::Bot::Client.run(token) do |bot|
             record_message = ''
             record = active_table.find_by(id: id)
             if record.nil?
-              bot.api.send_message(chat_id: message.chat.id, text: 'Неверный ввод, повторите команду снова')
+              return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
               user.update(step: nil)
             else
               record.attributes.each do |k, v|
@@ -644,13 +662,13 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: 'Введите новое значение для поля')
               user.update(step: 'update_field_value')
             else
-              bot.api.send_message(chat_id: message.chat.id, text: 'Неверный ввод, повторите команду снова')
+              return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
               user.update(step: nil)
             end
           when 'update_field_value'
             value = message.text
             record.update("#{field}": value)
-            bot.api.send_message(chat_id: message.chat.id, text: 'Запись обновлена')
+            return_buttons(user, bot, message.chat.id, 'Запись обновлена')
             user.update(step: nil)
           when 'input_pasport_title'
             passport_id = message.text
@@ -672,16 +690,16 @@ Telegram::Bot::Client.run(token) do |bot|
                 bot.api.send_message(chat_id: message.chat.id, text: 'Титул назначен')
               end
             else
-              bot.api.send_message(chat_id: message.chat.id, text: 'Неверный ввод, повторите команду снова')
+              return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
             end
             user.update(step: nil)
           when 'input_main_title'
             id = message.text
             if Title.find_by(id: id).nil?
-              bot.api.send_message(chat_id: message.chat.id, text: 'Неверный ввод, повторите команду снова')
+              return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
             else
               user.passport.update(main_title_id: id)
-              bot.api.send_message(chat_id: message.chat.id, text: 'Основной титул установлен')
+              return_buttons(user, bot, message.chat.id, 'Основной титул установлен')
             end
             user.update(step: nil)
           when 'input_substract'
@@ -701,7 +719,7 @@ Telegram::Bot::Client.run(token) do |bot|
                                      text: "Ваш абонемент закончился \xF0\x9F\x98\xA2\nБегом за новым \xF0\x9F\x8F\x83")
               end
             end
-            bot.api.send_message(chat_id: message.chat.id, text: 'Занятия вычтены')
+            return_buttons(user, bot, message.chat.id, 'Занятия вычтены')
             user.update(step: nil)
           when 'input_bd'
             bd = message.text
@@ -729,14 +747,11 @@ Telegram::Bot::Client.run(token) do |bot|
             user.update(step: nil)
           when 'input_abon_info'
             number = message.text
-            reply_markup = user.admin ? @admin_markup : @remove_keyboard
             passport = Passport.find_by(id: number)
             if passport.nil?
-              bot.api.send_message(chat_id: message.chat.id, text: 'Некорректный ввод, повторите команду',
-                                    reply_markup: reply_markup)
+              return_buttons(user, bot, message.chat.id, 'Некорректный ввод, повторите команду')
             else
-              bot.api.send_message(chat_id: message.chat.id,
-                                    text: "Имя: #{passport.nickname}\nДень рождения: #{passport.bd}\nНомер телефона: #{passport.number}\nОстаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}", reply_markup: reply_markup)
+              return_buttons(user, bot, message.chat.id, "Имя: #{passport.nickname}\nДень рождения: #{passport.bd}\nНомер телефона: #{passport.number}\nОстаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
             end
             user.update(step: nil)
           when 'input_change_info_field'
@@ -754,7 +769,7 @@ Telegram::Bot::Client.run(token) do |bot|
               info_message = 'номера мобильного телефона'
             end
             if number in ['1', '2', '3']
-              bot.api.send_message(chat_id: message.chat.id, text: 'Некорректный ввод, повторите команду')
+              return_buttons(user, bot, message.chat.id, 'Некорректный ввод, повторите команду')
               user.update(step: nil)
             else
               bot.api.send_message(chat_id: message.chat.id, text: "Введите новое значение для #{info_message}")
@@ -834,11 +849,17 @@ Telegram::Bot::Client.run(token) do |bot|
             User.all.each { |user| bot.api.send_message(chat_id: user.telegram_id, text: message.text) }
             return_buttons(user, bot, message.chat.id, 'Сообщение отправлено')
             user.update(step: nil)
+          when 'input_tournament_reward_type'
+            @reward_type = message.text
+            bot.api.send_message(chat_id: message.chat.id, text: 'Сколько?', reply_markup: cancel_markup)
+            user.update(step: 'input_reward_count')
+          when 'input_reward_count'
+            bot.api.send_message(chat_id: message.chat.id, text: 'Еще награды?', reply_markup: )
+            user.update(step: nil)
           end
         end
       rescue StandardError
-        bot.api.send_message(chat_id: message.chat.id,
-                             text: 'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
+        return_buttons(user, bot, message.chat.id, 'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
         user.update(step: nil)
       end
     end
