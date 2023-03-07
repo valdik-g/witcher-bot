@@ -357,7 +357,7 @@ Telegram::Bot::Client.run(token) do |bot|
               end
             when '/choose_title'
               titles = user.passport.titles if user.passport_id
-              if titles.nil?
+              if titles.nil? || titles.empty?
                 bot.api.send_message(chat_id: message.chat.id, text: 'Похоже у вас нет титулов')
               else
                 titles_message = ''
