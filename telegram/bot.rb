@@ -46,12 +46,12 @@ change_passport_h = nil
 
 update_field = ''
 
-options = %w[Сб1 Сб2 Вс0 Вс1 Вс2]
+options = %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2]
 
-cancel_mkb = [
+cancel_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
 ]
-cancel_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: cancel_mkb, resize_keyboard: true)
+cancel_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: cancel_kb, resize_keyboard: true)
 
 admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Создать паспорт'),
@@ -71,6 +71,7 @@ admin_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Открыть предзапись'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Закрыть предзапись')
 ]
+@admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
 yes_no_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Да'),
@@ -82,19 +83,16 @@ reward_types_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Свитки повтора'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Свитки доп квеста')
 ]
-
-@reward_types_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
-
-@admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
+reward_types_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: admin_kb, resize_keyboard: true)
 
 passport_kb = [
   Telegram::Bot::Types::InlineKeyboardButton.new(text: 'Открыть инвентарь', callback_data: 'inventory')
 ]
+passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: passport_kb)
 
 hamon_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Изменить описание')
 ]
-
 @hamon_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: hamon_kb, resize_keyboard: true)
 
 get_passport_kb = [
@@ -107,12 +105,14 @@ feedback_kb = [
   Telegram::Bot::Types::KeyboardButton.new(text: 'Открыто'),
   Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
 ]
-
 feedback_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: feedback_kb, resize_keyboard: true)
 
-passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: passport_kb)
-
 @remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
+
+tournament_markup = [
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Случайное распределение пар'),
+  Telegram::Bot::Types::KeyboardButton.new(text: 'Вручную')
+]
 
 main_admins_ids = [822_281_212, 612_352_098]
 
@@ -305,56 +305,24 @@ Telegram::Bot::Client.run(token) do |bot|
                                      text: "Что нужно изменить?\n1. Дата рождения\n2. Почта\n3. Телефон\nВводите цифрой", reply_markup: cancel_markup)
                 user.update(step: 'input_change_info_field')
               end
-            when 'Создать паспорт'
-              if user.admin
-                bot.api.send_message(chat_id: message.chat.id, text: 'Введите имя будующего ведьмака:', reply_markup: cancel_markup)
-                user.update(step: 'input_name')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
-            when 'Изменить запись'
-              if user.admin
-                table_message = ''
-                tables.map.with_index do |table, i|
-                  table_message += "#{i + 1}: #{table}\n".to_s
+            when '/birthdays'
+              bot.api.send_message(chat_id: message.chat.id, text: 'Список дней рождений на следующие сорок дней:')
+              birthday_message = ''
+              Passport.all.select(:nickname, :bd).sort_by { |pass| pass.bd.split('.').reverse.join('.')}.each do |pass|
+                unless pass.bd.blank?
+                  bd = pass.bd.split('.')
+                  if (bd[0] > format('%02i', DateTime.now.day) && bd[1] == format('%02i', DateTime.now.month)) || (bd[0] < format('%02i', (DateTime.now + 40).day) && bd[1] == format('%02i', (DateTime.now + 40).month))
+                    birthday_message += "#{pass.nickname}: #{bd[0]}.#{bd[1]}\n"
+                  end
                 end
-                bot.api.send_message(chat_id: message.chat.id,
-                                     text: "#{table_message}Выберите таблицу для изменения:", reply_markup: cancel_markup)
-                user.update(step: 'update_field')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
               end
-            when 'Создать квест'
-              if user.admin
-                bot.api.send_message(chat_id: message.chat.id, text: 'Введите название квеста:', reply_markup: cancel_markup)
-                user.update(step: 'input_kvest_name')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
-            when 'Выполнить квест'
-              if user.admin
-                output_all_passports(bot, message.chat.id)
-                bot.api.send_message(chat_id: message.chat.id,
-                                     text: 'Выберите номер паспорта игрока, выполнившего квест', reply_markup: cancel_markup)
-                user.update(step: 'input_passport_number')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
-            when 'Создать титул'
-              if user.admin
-                bot.api.send_message(chat_id: message.chat.id, text: 'Введите название титула', reply_markup: cancel_markup)
-                user.update(step: 'input_title_name')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
-            when 'Назначить титул'
-              if user.admin
-                output_all_passports(bot, message.chat.id)
-                bot.api.send_message(chat_id: message.chat.id, text: 'Выберите номер паспорта игрока', reply_markup: cancel_markup)
-                user.update(step: 'input_pasport_title')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
+              bot.api.send_message(chat_id: message.chat.id, text: birthday_message)
+            when '/feedback'
+              bot.api.send_message(chat_id: message.chat.id,
+                                   text: 'Тут можно оставить свои отзывы и пожелания по нашему клубу, ' \
+                'пожелания по будующему функционалу бота, ну и так далее, '\
+                'сообщение можно отправить как с подписью так и анонимно', reply_markup: feedback_markup)
+              user.update(step: 'choose_user_visibility')
             when '/choose_title'
               titles = user.passport.titles if user.passport_id
               if titles.nil? || titles.empty?
@@ -408,92 +376,161 @@ Telegram::Bot::Client.run(token) do |bot|
                                 end
                 bot.api.send_message(chat_id: message.chat.id, text: subs_message, reply_markup: sale_markup)
               end
-            when '/substract', 'Списать занятия'
-              output_all_passports(bot, message.chat.id)
-              bot.api.send_message(chat_id: message.chat.id, text: 'Выберите тех, кто был на тренировке', reply_markup: cancel_markup)
-              user.update(step: 'input_substract')
-            when '/subscription_info', 'Информация по игроку'
+            when 'Создать паспорт'
+              if user.admin
+                bot.api.send_message(chat_id: message.chat.id, text: 'Введите имя будующего ведьмака:', reply_markup: cancel_markup)
+                user.update(step: 'input_name')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+            when 'Изменить запись'
+              if user.admin
+                table_message = ''
+                tables.map.with_index do |table, i|
+                  table_message += "#{i + 1}: #{table}\n".to_s
+                end
+                bot.api.send_message(chat_id: message.chat.id,
+                                     text: "#{table_message}Выберите таблицу для изменения:", reply_markup: cancel_markup)
+                user.update(step: 'update_field')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+            when 'Создать квест'
+              if user.admin
+                bot.api.send_message(chat_id: message.chat.id, text: 'Введите название квеста:', reply_markup: cancel_markup)
+                user.update(step: 'input_kvest_name')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+            when 'Выполнить квест'
+              if user.admin
+                output_all_passports(bot, message.chat.id)
+                bot.api.send_message(chat_id: message.chat.id,
+                                     text: 'Выберите номер паспорта игрока, выполнившего квест', reply_markup: cancel_markup)
+                user.update(step: 'input_passport_number')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+            when 'Создать титул'
+              if user.admin
+                bot.api.send_message(chat_id: message.chat.id, text: 'Введите название титула', reply_markup: cancel_markup)
+                user.update(step: 'input_title_name')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+            when 'Назначить титул'
+              if user.admin
+                output_all_passports(bot, message.chat.id)
+                bot.api.send_message(chat_id: message.chat.id, text: 'Выберите номер паспорта игрока', reply_markup: cancel_markup)
+                user.update(step: 'input_pasport_title')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+            when 'Списать занятия'
+              if user.admin
+                output_all_passports(bot, message.chat.id)
+                bot.api.send_message(chat_id: message.chat.id, text: 'Выберите тех, кто был на тренировке', reply_markup: cancel_markup)
+                user.update(step: 'input_substract')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+            when 'Информация по игроку'
               output_all_passports(bot, message.chat.id)
               bot.api.send_message(chat_id: message.chat.id, text: 'Выберите паспорт', reply_markup: cancel_markup)
               user.update(step: 'input_abon_info')
             when 'Информация по всем абонементам'
-              passports = Passport.all
-              passports_message = ''
-              passports.map do |passport|
-                if passport.subscription.to_i < 1000
-                  passports_message += "#{passport.nickname}: #{passport.subscription}\n"
+              if user.admin
+                passports = Passport.all
+                passports_message = ''
+                passports.map do |passport|
+                  if passport.subscription.to_i < 1000
+                    passports_message += "#{passport.nickname}: #{passport.subscription}\n"
+                  end
                 end
+                bot.api.send_message(chat_id: message.chat.id, text: passports_message)
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
               end
-              bot.api.send_message(chat_id: message.chat.id, text: passports_message)
             when 'Провести турнир'
-              bot.api.send_message(chat_id: message.chat.id, text: 'Введите тип награды', reply_markup: cancel_markup)
-              user.update(step: 'input_tournament_reward_type')
+              if user.admin
+                bot.api.send_message(chat_id: message.chat.id, text: 'Введите тип награды', reply_markup: reward_types_markup)
+                user.update(step: 'input_tournament_reward_type')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
             when 'Открыть предзапись'
-              (Prerecording.last || Prerecording.create).update(closed: false)
-              bot.api.send_message(chat_id: message.chat.id, text: 'Введите сообщение', reply_markup: cancel_markup)
-              user.update(step: 'input_vote_message')
+              if user.admin
+                (Prerecording.last || Prerecording.create).update(closed: false)
+                bot.api.send_message(chat_id: message.chat.id, text: 'Введите сообщение', reply_markup: cancel_markup)
+                user.update(step: 'input_vote_message')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
             when 'Закрыть предзапись'
-              Prerecording.last.update(closed: true)
-              available_records = {}
-              Prerecording.last.choosed_options.split(',') { |l| available_records[l] = 10 }
-              close_message = ''
-              Prerecording.last.choosed_options.split(',').each_with_index do |option, i|
-                option_prerecord = UserPrerecording.where('days LIKE ?', "%#{i}%")
-                option_prerecord.each { |_prer| available_records[option] -= 1 }
-                close_message += option + "\n\n" + (option_prerecord.map do |pr|
-                                                      Passport.find(pr.passport_id).nickname
-                                                    end).join("\n")
-                close_message += "\n\n"
+              if user.admin
+                Prerecording.last.update(closed: true)
+                available_records = {}
+                Prerecording.last.choosed_options.split(',') { |l| available_records[l] = 10 }
+                close_message = ''
+                Prerecording.last.choosed_options.split(',').each_with_index do |option, i|
+                  option_prerecord = UserPrerecording.where('days LIKE ?', "%#{i}%")
+                  option_prerecord.each { |_prer| available_records[option] -= 1 }
+                  close_message += option + "\n\n" + (option_prerecord.map do |pr|
+                                                        Passport.find(pr.passport_id).nickname
+                                                      end).join("\n")
+                  close_message += "\n\n"
+                end
+                UserPrerecording.all.each do |pr|
+                  bot.api.send_message(
+                    chat_id: User.find_by(passport_id: pr.passport_id).telegram_id, text: 'Предзапись закрыта'
+                  )
+                end
+                output_string = ''
+                available_records.each { |l| output_string += "#{l[0]}: #{l[1]}\n" }
+                main_admins_ids.each do |id|
+                  bot.api.send_message(chat_id: id, text: close_message)
+                  bot.api.send_message(chat_id: id, text: "Количество свободных мест:\n#{output_string}")
+                end
+                UserPrerecording.update_all(days: '', message_id: nil)
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
               end
-              UserPrerecording.all.each do |pr|
-                bot.api.send_message(
-                  chat_id: User.find_by(passport_id: pr.passport_id).telegram_id, text: 'Предзапись закрыта'
-                )
-              end
-              output_string = ''
-              available_records.each { |l| output_string += "#{l[0]}: #{l[1]}\n" }
-              main_admins_ids.each do |id|
-                bot.api.send_message(chat_id: id, text: close_message)
-                bot.api.send_message(chat_id: id, text: "Количество свободных мест:\n#{output_string}")
-              end
-              UserPrerecording.update_all(days: '', message_id: nil)
             when 'Списать кроны'
-              output_all_passports(bot, message.chat.id)
-              bot.api.send_message(chat_id: message.chat.id, text: 'Кому спишем кроны?', reply_markup: cancel_markup)
-              user.update(step: 'input_crons_substract')
+              if user.admin
+                output_all_passports(bot, message.chat.id)
+                bot.api.send_message(chat_id: message.chat.id, text: 'Кому спишем кроны?', reply_markup: cancel_markup)
+                user.update(step: 'input_crons_substract')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
             when 'Начислить занятия'
-              output_all_passports(bot, message.chat.id)
-              bot.api.send_message(chat_id: message.chat.id, text: 'Выберите того, кому необходимо начислить занятия', reply_markup: cancel_markup)
-              user.update(step: 'input_subscription_addition')
+              if user.admin
+                output_all_passports(bot, message.chat.id)
+                bot.api.send_message(chat_id: message.chat.id, text: 'Выберите того, кому необходимо начислить занятия', reply_markup: cancel_markup)
+                user.update(step: 'input_subscription_addition')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
             when 'Повысить ранг'
-              output_all_passports(bot, message.chat.id)
-              bot.api.send_message(chat_id: message.chat.id, text: 'Выберите того, кому необходимо поднять ранг', reply_markup: cancel_markup)
-              user.update(step: 'input_passport_rank')
+              if user.admin
+                output_all_passports(bot, message.chat.id)
+                bot.api.send_message(chat_id: message.chat.id, text: 'Выберите того, кому необходимо поднять ранг', reply_markup: cancel_markup)
+                user.update(step: 'input_passport_rank')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
             when 'Уведомление'
-              bot.api.send_message(chat_id: message.chat.id, text: 'Введите уведомление', reply_markup: cancel_markup)
-              user.update(step: 'input_notification')
+              if user.admin
+                bot.api.send_message(chat_id: message.chat.id, text: 'Введите уведомление', reply_markup: cancel_markup)
+                user.update(step: 'input_notification')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
             when '/remove'
               reply_markup = user.admin ? @admin_markup : @remove_keyboard
               reply_markup = @hamon_markup if user.telegram_id == 448_768_896
               bot.api.send_message(chat_id: message.chat.id, text: 'Кнопки убраны)', reply_markup: reply_markup)
-            when '/birthdays'
-              bot.api.send_message(chat_id: message.chat.id, text: 'Список дней рождений на следующие сорок дней:')
-              birthday_message = ''
-              Passport.all.select(:nickname, :bd).sort_by { |pass| pass.bd.split('.').reverse.join('.')}.each do |pass|
-                unless pass.bd.blank?
-                  bd = pass.bd.split('.')
-                  if (bd[0] > format('%02i', DateTime.now.day) && bd[1] == format('%02i', DateTime.now.month)) || (bd[0] < format('%02i', (DateTime.now + 40).day) && bd[1] == format('%02i', (DateTime.now + 40).month))
-                    birthday_message += "#{pass.nickname}: #{bd[0]}.#{bd[1]}\n"
-                  end
-                end
-              end
-              bot.api.send_message(chat_id: message.chat.id, text: birthday_message)
-            when '/feedback'
-              bot.api.send_message(chat_id: message.chat.id,
-                                   text: 'Тут можно оставить свои отзывы и пожелания по нашему клубу, ' \
-                'пожелания по будующему функционалу бота, ну и так далее, '\
-                'сообщение можно отправить как с подписью так и анонимно', reply_markup: feedback_markup)
-              user.update(step: 'choose_user_visibility')
+            
             when 'Изменить описание'
               output_all_passports(bot, message.chat.id)
               bot.api.send_message(chat_id: message.chat.id,
@@ -854,8 +891,77 @@ Telegram::Bot::Client.run(token) do |bot|
             bot.api.send_message(chat_id: message.chat.id, text: 'Сколько?', reply_markup: cancel_markup)
             user.update(step: 'input_reward_count')
           when 'input_reward_count'
-            bot.api.send_message(chat_id: message.chat.id, text: 'Еще награды?', reply_markup: @reward_types_markup)
-            user.update(step: nil)
+            # @reward_count = message.text
+            # if @tournament.nil?
+            #   @tournament = Tournament.create(@reward_type: @reward_count)
+            # else
+            #   Tournament.last.update(@reward_type: @reward_count)
+            #   @tournament.reload
+            # end
+            # bot.api.send_message(chat_id: message.chat.id, text: 'Еще награды?', reply_markup: yes_no_kb)
+            # user.update(step: 'input_reward_repeat')
+          when 'input_reward_repeat'
+            if message.text == 'Да'
+              bot.api.send_message(chat_id: message.chat.id, text: 'Введите тип награды', reply_markup: reward_types_markup)
+              user.update(:step => 'input_tournament_reward_type')
+            else
+              bot.api.send_message(chat_id: message.chat.id, text: 'Введите участников турнира', reply_markup: cancel_markup)
+              output_all_passports(bot, message.chat.id)
+              user.update(:step => 'input_tournament_members')
+            end
+          when 'input_tournament_members'
+            @tournament.update(:members => message.text.split(' '))
+            @tournament.members.each { |id|  bot.api.send_message(chat_id: User.find_by(:passport_id => id).telegram_id, text: 'Вы участник турнира, приготовьтесь!')}
+            bot.api.send_message(chat_id: message.chat.id, text: 'Выберите распредление участников', reply_markup: tournament_markup)
+            user.update('input_distribution')
+          when 'input_distribution'
+            members = @tournament.members
+            if message.text == 'Случайное распределение пар'
+              pairs_list = ''
+              pair_id_list = ''
+              while members.length.positive?
+                sample = members.sample
+                pair1 = Passport.find(sample)
+                members.delete(sample)
+                if members.length > 0
+                  sample = members.sample
+                  pair2 = Passport.find(sample)
+                  members.delete(sample)
+                  pair_list += "#{pair1.titles.find(pair1.main_title_id)} #{pair1.nickname}" \
+                  " - #{pair2.titles.find(pair2.main_title_id)} #{pair2.nickname} \n"
+                  pair_id_list += "#{pair1.id} #{pair2.id}\n"
+                else
+                  @tournament
+                  pair_list += "#{pair1.titles.find(pair1.main_title_id)} #{pair1.nickname} \n"
+                end
+              end
+              @tournament.update(:pairs => pair_id_list)
+              @tournament.members.split(' ').each do |member|
+                bot.api.send_message(chat_id: User.find_by(:passport_id => member).telegram_id, text: "Список пар: ")
+                bot.api.send_message(chat_id: User.find_by(:passport_id => member).telegram_id, text: pair_list)
+                User.find_by(:passport_id => member).update(:step => 'fights')
+              end
+            else
+            end
+            #TODO do something with buttons
+            fight_order_kb = [ 
+              Telegram::Bot::Types::KeyboardButton.new(text: @tournament.pairs.split("\n")[0]),
+              Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
+            ]
+            bot.api.send_message(chat_id: message.chat.id, text: 'Введите победителя')
+            user.update('fight_winner')
+          when 'fight_winner'
+            @tournament.pairs.update
+          when 'fights'
+            fight_order_kb = [ 
+              Telegram::Bot::Types::KeyboardButton.new(text: @tournament.pairs.split("\n")[@tournament.iteration]),
+              Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
+            ]
+            feedback_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: feedback_kb, resize_keyboard: true)
+            @tournament.members.split(' ').excluding().each do |member|
+              bot.api.send_message(chat_id: User.find_by(:passport_id => member).telegram_id, text: "Ваша ставка, на кого и сколько?")
+              bot.api.send_message(chat_id: User.find_by(:passport_id => member).telegram_id, text: pair_list)
+            end
           end
         end
       rescue StandardError
