@@ -1,0 +1,2 @@
+module ChangeRecord
+end

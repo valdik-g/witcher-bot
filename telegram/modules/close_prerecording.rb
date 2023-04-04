@@ -1,0 +1,2 @@
+module ClosePrerecording
+end
