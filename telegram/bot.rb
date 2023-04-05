@@ -540,16 +540,15 @@ Telegram::Bot::Client.run(token) do |bot|
               user.update(step: 'input_school')
             when 'input_school'
               school = message.text
-              passport = Passport.create(nickname: @witcher_name, crons: 0, school: school,
+              @passport = Passport.create(nickname: @witcher_name, crons: 0, school: school,
                                         level: 0, rank: 'Рекрут', additional_kvest: 0, description: 'Отсутствует',
                                         elixirs: 'Нет')
               bot.api.send_message(chat_id: message.chat.id, text: 'Введите ник пользователя в телеграмм')
               user.update(step: 'input_telegram_nick')
             when 'input_telegram_nick'
               telegram_nick = message.text
-              passport.update(telegram_nick: telegram_nick)
-              update_user = User.find_by(username: telegram_nick)
-              update_user&.update(passport_id: passport.id)
+              @passport.update(telegram_nick: telegram_nick)
+              User.find_by(username: telegram_nick).update(passport_id: @passport.id)
               return_buttons(user, bot, message.chat.id, 'Запись создана')
               user.update(step: nil)
             when 'change_user_description'
