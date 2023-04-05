@@ -548,7 +548,8 @@ Telegram::Bot::Client.run(token) do |bot|
             when 'input_telegram_nick'
               telegram_nick = message.text
               @passport.update(telegram_nick: telegram_nick)
-              User.find_by(username: telegram_nick).update(passport_id: @passport.id)
+              new_user = User.find_by(username: telegram_nick)
+              new_user.update(passport_id: @passport.id) unless new_user.nil?
               return_buttons(user, bot, message.chat.id, 'Запись создана')
               user.update(step: nil)
             when 'change_user_description'
