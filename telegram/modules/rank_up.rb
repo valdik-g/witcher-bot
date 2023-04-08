@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# module for ranking up users
 module RankUp
   def rank_up(message, bot, user, cancel_markup)
     if user.admin
@@ -22,6 +23,5 @@ module RankUp
       bot.api.send_message(chat_id: User.find_by(passport_id: passport.id).telegram_id,
                            text: "Поздравляем, ваш ранг повышен до #{ranks[next_rank]}")
     end
-    user.update(step: nil)
   end
 end

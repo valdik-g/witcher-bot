@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# module for add completed kvests to users
 module CompleteKvest
   def complete_kvest(message, bot, user, cancel_markup)
     if user.admin
@@ -53,6 +54,5 @@ module CompleteKvest
       end
     end
     return_buttons(user, bot, message.chat.id, 'Квесты проставлены игрокам')
-    user.update(step: nil)
   end
 end

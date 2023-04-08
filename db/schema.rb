@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_03_01_095648) do
+ActiveRecord::Schema[7.0].define(version: 2023_04_07_065111) do
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -19,6 +19,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_095648) do
     t.datetime "updated_at", null: false
     t.integer "level_reward"
     t.integer "title_id"
+    t.integer "additional_kvest", default: 0
+    t.integer "kvest_repeat", default: 0
   end
 
   create_table "kvests_passports", force: :cascade do |t|
@@ -39,7 +41,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_095648) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "telegram_nick"
-    t.integer "long_kvest_id", default: 0
+    t.integer "long_kvest_id"
     t.string "history", default: ""
     t.string "elixirs"
     t.string "inventory", default: ""
@@ -50,6 +52,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_095648) do
     t.string "mail", default: ""
     t.string "number", default: ""
     t.string "familiar", default: "Фамальяр еще не получен"
+    t.integer "kvest_repeat", default: 0
   end
 
   create_table "passports_titles", force: :cascade do |t|
@@ -69,6 +72,16 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_01_095648) do
   create_table "titles", force: :cascade do |t|
     t.string "title_name"
     t.string "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "tournaments", force: :cascade do |t|
+    t.integer "crons"
+    t.integer "additional_kvest"
+    t.integer "repeat_kvest"
+    t.string "pairs"
+    t.string "winneres"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
