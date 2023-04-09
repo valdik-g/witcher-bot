@@ -161,9 +161,9 @@ Telegram::Bot::Client.run(token) do |bot|
                                   reply_markup: passport_markup)
       end
     when Telegram::Bot::Types::Message
-      # begin
+      begin
         user = find_or_build_user(message.from)
-        if main_admins_ids.include?(user.telegram_id)
+        # if main_admins_ids.include?(user.telegram_id)
           unless message.text.nil? && !message.text.empty? # && message.document.nil?
             if message.text == 'Отмена'
               return_buttons(user, bot, message.chat.id, 'Действие отменено')
@@ -697,14 +697,14 @@ Telegram::Bot::Client.run(token) do |bot|
               # end
             end
           end
-        else
-          bot.api.send_message(chat_id: message.chat.id,
-                                    text: "Ведутся работы, пожалуйста подождите")
-        end
-      # rescue StandardError
-      #   return_buttons(user, bot, message.chat.id,
-      #                  'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
-      # end
+        # else
+        #   bot.api.send_message(chat_id: message.chat.id,
+        #                             text: "Ведутся работы, пожалуйста подождите")
+        # end
+      rescue StandardError
+        return_buttons(user, bot, message.chat.id,
+                       'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
+      end
     end
   end
 end
