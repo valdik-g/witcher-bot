@@ -161,9 +161,9 @@ Telegram::Bot::Client.run(token) do |bot|
                                   reply_markup: passport_markup)
       end
     when Telegram::Bot::Types::Message
-      begin
+      # begin
         user = find_or_build_user(message.from)
-        # if main_admins_ids.include?(user.telegram_id)
+        if main_admins_ids.include?(user.telegram_id)
           unless message.text.nil? && !message.text.empty? # && message.document.nil?
             if message.text == 'Отмена'
               return_buttons(user, bot, message.chat.id, 'Действие отменено')
@@ -414,12 +414,7 @@ Telegram::Bot::Client.run(token) do |bot|
               when 'Повысить ранг'
                 rank_up(message, bot, user, cancel_markup)
               when 'Уведомление'
-                if user.admin
-                  bot.api.send_message(chat_id: message.chat.id, text: 'Введите уведомление', reply_markup: cancel_markup)
-                  user.update(step: 'input_notification')
-                else
-                  bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-                end
+                notification(message, bot, user, cancel_markup)
               when '/remove'
                 reply_markup = user.admin ? @admin_markup : @remove_keyboard
                 reply_markup = @hamon_markup if user.telegram_id == 448_768_896
@@ -484,7 +479,6 @@ Telegram::Bot::Client.run(token) do |bot|
             when 'input_passport_number'
               @passport_number = input_passport_number(message, bot, user)
             when 'input_kvest_number'
-              p message
               input_kvest_number(message, bot, user, @passport_number)
             when 'input_title_name'
               @title_name = input_title_name(message, bot, user)
@@ -614,8 +608,7 @@ Telegram::Bot::Client.run(token) do |bot|
             when 'input_passport_rank'
               input_passport_rank(message, bot, user)
             when 'input_notification'
-              User.all.each { |u| bot.api.send_message(chat_id: u.telegram_id, text: message.text) }
-              return_buttons(user, bot, message.chat.id, 'Сообщение отправлено')
+              input_notification(message, bot, user)
               # when 'input_tournament_reward_type'
               #   @reward_type = message.text
               #   bot.api.send_message(chat_id: message.chat.id, text: 'Сколько?', reply_markup: cancel_markup)
@@ -704,14 +697,14 @@ Telegram::Bot::Client.run(token) do |bot|
               # end
             end
           end
-        # else
-        #   bot.api.send_message(chat_id: message.chat.id,
-        #                             text: "Ведутся работы, пожалуйста подождите")
-        # end
-      rescue StandardError
-        return_buttons(user, bot, message.chat.id,
-                       'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
-      end
+        else
+          bot.api.send_message(chat_id: message.chat.id,
+                                    text: "Ведутся работы, пожалуйста подождите")
+        end
+      # rescue StandardError
+      #   return_buttons(user, bot, message.chat.id,
+      #                  'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
+      # end
     end
   end
 end
