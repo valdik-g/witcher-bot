@@ -27,23 +27,24 @@ module CompleteKvest
   end
 
   def input_kvest_number(message, bot, user, passport_number)
-    kvest_number = message.text
-    kvests_number = kvest_number.split(' ')
-    passports_number = passport_number.split(' ')
-    passports_number.map do |pass_number|
-      passport = Passport.find_by(id: pass_number)
+    kvests_number = message.text.split(' ')
+    passport_number.split(' ').map do |pass_number|
+      passport = Passport.find(pass_number)
       next unless passport
 
       kvests_number.map do |number|
-        kvest = Kvest.find_by(id: number)
+        kvest = Kvest.find(number)
         next unless kvest
 
         new_crons = kvest.crons_reward + passport.crons
         new_level = (kvest.level_reward + passport.level.to_i).to_s
-        passport.update(crons: new_crons, level: new_level)
+        new_addkvest = kvest.additional_kvest + passport.additional_kvest
+        new_repkvest = kvest.kvest_repeat + passport.kvest_repeat
+        passport.update(crons: new_crons, level: new_level, additional_kvest: new_addkvest, kvest_repeat: new_repkvest)
         passport.titles << Title.find_by(id: kvest.title_id) unless kvest.title_id.nil?
-        passport.update(inventory: passport.inventory + kvest.additional_reward) if kvest.additional_reward != 'Нет'
-        passport.update(inventory: "#{passport.inventory}\n") if kvest.additional_reward != 'Нет'
+        unless kvest.additional_reward.downcase == 'нет'
+          passport.update(inventory: passport.inventory + kvest.additional_reward + "\n")
+        end
         passport.kvests << kvest
         bot.api.send_message(chat_id: message.chat.id,
                              text: "Квест #{kvest.kvest_name} успешно выполнен игроком #{passport.nickname}")

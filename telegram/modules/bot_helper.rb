@@ -23,10 +23,9 @@ module BotHelper
     user || User.create(telegram_id: user_obj.id, username: username)
   end
 
-  def output_passport(passport_id)
-    user = User.find_by(:passport_id => passport_id)
+  def output_passport(passport_id, user)
     passport = Passport.find(passport_id)
-    kvests = passport.kvests.map { |kvest| "-#{kvest.kvest_name}\n" }
+    kvests = passport.kvests.map { |kvest| "-#{kvest.kvest_name}\n" }.join
     long_kvest = passport.long_kvest_id.nil? ? 'Нет' : Kvest.find_by(id: passport.long_kvest_id).kvest_name
     title = passport.main_title_id.nil? ? 'Отсутствует' : Title.find_by(id: passport.main_title_id).title_name
     "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl\nРАНГ - #{passport.rank}\n
