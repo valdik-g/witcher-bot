@@ -141,7 +141,7 @@ Telegram::Bot::Client.run(token) do |bot|
                                     text: 'Похоже к вам еще не привязан паспорт, используйте кнопку ' \
                                           'Получить свой паспорт')
               else
-                message_kvests = user.passport.kvests.map { |kvest| "#{kvest['kvest_name']}\n" }
+                message_kvests = user.passport.kvests.map { |kvest| "#{kvest['kvest_name']}\n" }.join
                 bot.api.send_message(chat_id: message.chat.id, text: "Выполненные квесты:\n\n#{message_kvests}")
               end
             when '/change_info'

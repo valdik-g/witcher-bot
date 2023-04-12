@@ -15,11 +15,7 @@ module CompleteKvest
   end
 
   def input_passport_number(message, bot, user)
-    kvests = Kvest.all
-    kvests_message = ''
-    kvests.map do |kvest|
-      kvests_message += "#{kvest.id}: #{kvest.kvest_name}\n"
-    end
+    kvests_message = Kvest.all.map { |kvest| "#{kvest.id}: #{kvest.kvest_name}\n"}.join
     bot.api.send_message(chat_id: message.chat.id, text: kvests_message)
     bot.api.send_message(chat_id: message.chat.id, text: 'Введите номер(а) выполненного квеста')
     user.update(step: 'input_kvest_number')
