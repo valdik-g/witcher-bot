@@ -5,7 +5,7 @@ require 'telegram/bot'
 require 'json'
 
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord CreateTitle CompleteKvest RankUp
-            SubscriptionInfo SubstractCrons SubstractVisitings CreateKvest]
+            SubscriptionInfo SubstractCrons SubstractVisitings CreateKvest OpenPrerecording ClosePrerecording]
 export_for_user = %w[GetPassport GetSubscription UpdateHistory ChangeInfo LeaveFeedback GetPlayer
                      Birthdays ChooseTitle ChangeDescription]
 
