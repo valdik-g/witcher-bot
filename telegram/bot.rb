@@ -9,6 +9,10 @@ export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord CreateTitle Compl
 export_for_user = %w[GetPassport GetSubscription UpdateHistory ChangeInfo LeaveFeedback GetPlayer
                      Birthdays ChooseTitle ChangeDescription]
 
+options =  %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2]
+
+main_admins_ids = [822_281_212, 612_352_098]
+
 ['./telegram/modules/*.rb', './telegram/modules/user_modules/*.rb'].each { |p| Dir[p].each { |f| require f } }
 export.each { |m| include(Kernel.const_get(m)) }
 export_for_user.each { |m| include(Kernel.const_get(m)) }
@@ -70,10 +74,24 @@ Telegram::Bot::Client.run(token) do |bot|
   )
 
   bot.listen do |message|
+    # message = nil
     case message
     when Telegram::Bot::Types::PollAnswer
-      if user.step == 'create_prerecording'
-        create_prerecording(message, bot, user, @vote_message)
+      if message.user.id == 612_352_098
+        @choosed_options = message.option_ids.map { |l| options[l.to_i] }
+        Prerecording.last.update(choosed_options: (message.option_ids.map { |l| options[l.to_i] }).join(','))
+        passports = Passport.where('subscription > 0 and subscription < 1000')
+        passports.map do |pass|
+          next if User.find_by(passport_id: pass.id).nil? || User.find_by(passport_id: pass.id).telegram_id.nil?
+
+          bot.api.send_message(chat_id: User.find_by(passport_id: pass.id).telegram_id, text: @vote_message)
+          poll_message_id = bot.api.send_poll(chat_id: User.find_by(passport_id: pass.id).telegram_id,
+                                              question: 'Куда идем?', allows_multiple_answers: true,
+                                              options: @choosed_options, is_anonymous: false)
+          (UserPrerecording.find_by(passport_id: pass.id) || UserPrerecording.create(passport_id: pass.id))
+            .update(message_id: poll_message_id)
+        end
+        return_buttons(User.find_by(telegram_id: 612_352_098), bot, 612_352_098, 'Предзапись открыта')
       elsif Prerecording.last.closed
         bot.api.send_message(chat_id: message.user.id, text: 'Предзапись уже закрыта, ждите дальнейших новостей')
       else
@@ -105,7 +123,7 @@ Telegram::Bot::Client.run(token) do |bot|
     when Telegram::Bot::Types::Message
       begin
         user = find_or_build_user(message.from)
-        # if [822_281_212, 612_352_098].include?(user.telegram_id)
+        # if [822_281_212, 612_352_098, 499620114].include?(user.telegram_id)
         unless message.text.nil? && !message.text.empty? # && message.document.nil?
           return_buttons(user, bot, message.chat.id, 'Действие отменено') if message.text == 'Отмена'
           case user.step
@@ -193,9 +211,43 @@ Telegram::Bot::Client.run(token) do |bot|
             when 'Провести турнир'
               bot.api.send_message(chat_id: message.chat.id, text: "Не протестировано")
             when 'Открыть предзапись'
-              open_prerecording(message, bot, user, cancel_markup)
+              if user.admin
+                (Prerecording.last || Prerecording.create).update(closed: false)
+                bot.api.send_message(chat_id: message.chat.id, text: 'Введите сообщение', reply_markup: cancel_markup)
+                user.update(step: 'input_vote_message')
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
+              # open_prerecording(message, bot, user, cancel_markup)
             when 'Закрыть предзапись'
-              close_prerecording(message, bot, user)
+              if user.admin
+                Prerecording.last.update(closed: true)
+                available_records = {}
+                Prerecording.last.choosed_options.split(',') { |l| available_records[l] = 10 }
+                close_message = ''
+                Prerecording.last.choosed_options.split(',').each_with_index do |option, i|
+                  option_prerecord = UserPrerecording.where('days LIKE ?', "%#{i}%")
+                  option_prerecord.each { |_prer| available_records[option] -= 1 }
+                  close_message += option + "\n\n" + (option_prerecord.map do |pr|
+                                                        Passport.find(pr.passport_id).nickname
+                                                      end).join("\n")
+                  close_message += "\n\n"
+                end
+                UserPrerecording.all.each do |pr|
+                  bot.api.send_message(
+                    chat_id: User.find_by(passport_id: pr.passport_id).telegram_id, text: 'Предзапись закрыта'
+                  )
+                end
+                output_string = ''
+                available_records.each { |l| output_string += "#{l[0]}: #{l[1]}\n" }
+                main_admins_ids.each do |admin|
+                  bot.api.send_message(chat_id: admin, text: close_message)
+                  bot.api.send_message(chat_id: admin, text: "Количество свободных мест:\n#{output_string}")
+                end
+                UserPrerecording.update_all(days: '', message_id: nil)
+              else
+                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+              end
             when 'Списать кроны'
               substract_crons(message, bot, user, cancel_markup)
             when 'Начислить занятия'
@@ -299,7 +351,11 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'input_info_value'
             input_info_value(message, bot, user, @update_field)
           when 'input_vote_message'
-            @vote_message = input_vote_message(message, bot, user)
+            @vote_message = message.text
+            bot.api.send_poll(chat_id: message.chat.id,
+                              question: 'Какие тренировки планируются?', allows_multiple_answers: true, options: options,
+                              is_anonymous: false)
+            user.update(step: nil)
           when 'input_descr_passport'
             @change_passport_h = input_descr_passport(message, bot, user)
           when 'input_new_description'
