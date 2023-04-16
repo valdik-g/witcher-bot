@@ -37,8 +37,8 @@ module GetPassport
     message.text
   end
 
-  def input_number(message, bot, user, bd, mail)
-    user.passport.update(bd: @bd, mail: @mail, number: message.text)
+  def input_number(message, bot, user, bd, mail, passport_markup)
+    user.passport.update(bd: bd, mail: mail, number: message.text)
     bot.api.send_message(chat_id: message.chat.id, text: output_passport(user.passport_id, user),
                          reply_markup: passport_markup)
     user.update(step: nil)

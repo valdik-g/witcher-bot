@@ -7,7 +7,7 @@ require 'json'
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord CreateTitle CompleteKvest RankUp
             SubscriptionInfo SubstractCrons SubstractVisitings CreateKvest OpenPrerecording ClosePrerecording]
 export_for_user = %w[GetPassport GetSubscription UpdateHistory ChangeInfo LeaveFeedback GetPlayer
-                     Birthdays ChooseTitle ChangeDescription]
+                     Birthdays ChooseTitle ChangeDescription PassportCallbackQuery]
 
 options =  %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2]
 
@@ -99,26 +99,8 @@ Telegram::Bot::Client.run(token) do |bot|
       end
     when Telegram::Bot::Types::CallbackQuery
       case message.data
-      when 'inventory'
-        user = find_or_build_user(message.from)
-        passport = user.passport
-        inventory = passport.inventory
-        inventory += "\n" unless passport.inventory.split("\n").empty?
-        additional_kvest = ''
-        unless passport.additional_kvest.zero?
-          additional_kvest = "\xF0\x9F\x8E\x9F\xEF\xB8\x8F Специальные предметы:\nСвиток дополнительного " \
-                             "квеста #{passport.additional_kvest} штук(и)\n\n"
-        end
-        bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
-                                  text: "\xF0\x9F\x8E\x92 СУМКА:\n#{inventory}"\
-          "#{additional_kvest}\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(' ').join("\n")}#{if passport.school == 'Школа Змеи'
-                                                                                                       "\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}\n"
-                                                                                                     end}",
-                                  reply_markup: get_passport_markup)
-      when 'passport'
-        user = find_or_build_user(message.from)
-        bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
-                                  text: output_passport(user.passport_id, user), reply_markup: passport_markup)
+      when 'inventory' then get_inventory(message, bot, get_passport_markup)
+      when 'passport'  then get_passport_back(message, bot, passport_markup)
       end
     when Telegram::Bot::Types::Message
       begin
@@ -334,7 +316,7 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'input_mail'
             @mail = input_mail(message, bot, user)
           when 'input_number'
-            input_number(message, bot, user, @bd, @mail)
+            input_number(message, bot, user, @bd, @mail, passport_markup)
           when 'input_player_passport_number'
             input_player_passport_number(message, bot, user)
           when 'input_abon_info'
