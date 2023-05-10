@@ -8,7 +8,7 @@ export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
             SubscriptionInfo SubstractCrons SubstractVisitings]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
-                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme UpdateHistory]
+                      GetPassport GetPlayer GetPrerecording GetSubscription LeaveFeedback Meme UpdateHistory]
 
 options =  %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2]
 
@@ -72,13 +72,15 @@ Telegram::Bot::Client.run(token) do |bot|
             when '/feedback'
               leave_feedback(message, bot, user)
             when '/choose_title'
-              choose_title(message, bot, user)
+              choose_title(message.chat.id, bot, user)
             when '/get_player'
               get_player(message, bot, user)
             when '/mem'
               meme(message, bot, user)
             when '/subscription'
               get_subscription(message, bot, user)
+            when '/prerecording'
+              get_prerecording(message.chat.id, bot)
             when 'Создать паспорт'
               create_passport(message, bot, user)
             when 'Изменить запись'
