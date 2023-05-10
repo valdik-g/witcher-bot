@@ -3,7 +3,7 @@
 # module with help functions for bot
 module BotHelper
   def return_buttons(user, bot, chat_id, message_text)
-    reply_markup = user.admin ? admin_markup : remove_keyboard
+    reply_markup = user.admin ? admin_markup : remove_markup
     reply_markup = hamon_markup if user.telegram_id == 448_768_896
     bot.api.send_message(chat_id: chat_id, text: message_text, reply_markup: reply_markup)
     user.update(step: nil)
