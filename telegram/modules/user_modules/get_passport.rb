@@ -22,7 +22,7 @@ module GetPassport
       user.update(step: 'input_bd')
     else
       bot.api.send_message(chat_id: message.chat.id, text: output_passport(user.passport_id, user),
-                           reply_markup: passport_markup)
+                           reply_markup: inventory_markup)
     end
   end
 
@@ -41,11 +41,11 @@ module GetPassport
   def input_number(message, bot, user, bd, mail)
     user.passport.update(bd: bd, mail: mail, number: message.text)
     bot.api.send_message(chat_id: message.chat.id, text: output_passport(user.passport_id, user),
-                         reply_markup: passport_markup)
+                         reply_markup: inventory_markup)
     user.update(step: nil)
   end
 
-  def passport_markup
+  def inventory_markup
     Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: [
       Telegram::Bot::Types::InlineKeyboardButton.new(
         text: 'Открыть инвентарь', callback_data: 'inventory'
