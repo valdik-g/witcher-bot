@@ -2,7 +2,7 @@
 
 # module for getting any passport of players
 module GetPlayer
-  def get_player(message, bot, user, cancel_markup)
+  def get_player(message, bot, user)
     output_all_passports(bot, message.chat.id)
     bot.api.send_message(chat_id: message.chat.id, text: 'Выберите номер паспорта игрока', reply_markup: cancel_markup)
     user.update(step: 'input_player_passport_number')

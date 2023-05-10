@@ -2,7 +2,7 @@
 
 # module for updating history of user
 module UpdateHistory
-  def update_history(message, bot, user, cancel_markup)
+  def update_history(message, bot, user)
     if user.passport_id.nil?
       bot.api.send_message(chat_id: message.chat.id,
                            text: 'Похоже к вам еще не привязан паспорт, используйте кнопку ' \

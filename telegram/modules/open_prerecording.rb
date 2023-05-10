@@ -2,7 +2,7 @@
 
 # module for open prerecording for users
 module OpenPrerecording
-  def open_prerecording(message, bot, user, cancel_markup)
+  def open_prerecording(message, bot, user)
     if user.admin
       (Prerecording.last || Prerecording.create).update(closed: false)
       bot.api.send_message(chat_id: message.chat.id, text: 'Введите сообщение', reply_markup: cancel_markup)
@@ -13,17 +13,15 @@ module OpenPrerecording
   end
 
   def input_vote_message(message, bot, user)
-    bot.api.send_poll(chat_id: message.chat.id,
-                      question: 'Какие тренировки планируются?', allows_multiple_answers: true,
-                      options: %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2],
-                      is_anonymous: false)
+    bot.api.send_poll(chat_id: message.chat.id, question: 'Какие тренировки планируются?', 
+                      allows_multiple_answers: true, options: %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2], is_anonymous: false)
     user.update(step: 'create_prerecording')
     message.text
   end
 
   def create_prerecording(message, bot, user, vote_message)
     choosed_options = message.option_ids.map { |l| %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2][l.to_i] }
-    Prerecording.last.update(choosed_options: choosed_option.join(','))
+    Prerecording.last.update(choosed_options: choosed_options.join(','))
     passports = Passport.where('subscription > 0 and subscription < 1000')
     passports.map do |pass|
       next if User.find_by(passport_id: pass.id).nil? || User.find_by(passport_id: pass.id).telegram_id.nil?
@@ -35,6 +33,28 @@ module OpenPrerecording
       (UserPrerecording.find_by(passport_id: pass.id) || UserPrerecording.create(passport_id: pass.id))
         .update(message_id: poll_message_id)
     end
-    user.update(step: nil)
+    return_buttons(user, bot, message.user.id, 'Предзапись создана')
+  end
+
+  def prerecord_user(bot, message, user)
+    prerec = Prerecording.last
+    closed_trainings = prerec.closed_prerecordings.split(',')
+    user.passport.user_prerecording
+    .update(days: message.option_ids.excluding(closed_trainings.map(&:to_i)).join(','), voted: true)
+    # UserPrerecording.find_by(passport_id: User.find_by(telegram_id: message.user.id).passport_id)
+    #                 .update(days: message.option_ids.excluding(Prerecording.last.closed_prerecordings.split(',')).join(','), voted: true)
+    message.option_ids.excluding(closed_trainings.map(&:to_i)).each do |option|
+      available_trainings = prerec.available_trainings.split(',').map(&:to_i)
+      available_trainings[option.to_i] -= 1
+      if available_trainings[option.to_i].zero?
+        prerec.update(closed_prerecordings: (closed_trainings << option.to_i).join(','))
+        UserPrerecording.where(voted: false).each do |up|
+          bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                               text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                     " закрыта, в случае голосавания голос не будет учтен !!!")
+        end
+      end
+      prerec.update(available_trainings: available_trainings.join(','))
+    end
   end
 end

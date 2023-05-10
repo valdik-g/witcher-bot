@@ -2,7 +2,7 @@
 
 # module for sending notifications for users
 module Notification
-  def notification(message, bot, user, cancel_markup)
+  def notification(message, bot, user)
     if user.admin
       bot.api.send_message(chat_id: message.chat.id, text: 'Введите уведомление', reply_markup: cancel_markup)
       user.update(step: 'input_notification')

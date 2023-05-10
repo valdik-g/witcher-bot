@@ -2,7 +2,7 @@
 
 # module for changing user description
 module ChangeDescription
-  def change_description(message, bot, user, cancel_markup)
+  def change_description(message, bot, user)
     output_all_passports(bot, message.chat.id)
     bot.api.send_message(chat_id: message.chat.id,
                          text: 'Жги, выбирай кому поменять описание, вводи циферку',
@@ -11,11 +11,16 @@ module ChangeDescription
   end
 
   def input_descr_passport(message, bot, user)
-    bot.api.send_message(chat_id: message.chat.id,
-                         text: "Предыдущее описание: #{@change_passport_h.description}\n" \
-     'Введите новое описание:')
-    user.update(step: 'input_new_description')
-    Passport.find(id: message.text)
+    change_passport_h = Passport.find_by(id: message.text)
+    if change_passport_h
+      bot.api.send_message(chat_id: message.chat.id,
+                          text: "Предыдущее описание: #{change_passport_h.description}\n" \
+      'Введите новое описание:')
+      user.update(step: 'input_new_description')
+      return change_passport_h
+    else
+      return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
+    end
   end
 
   def input_new_description(message, bot, user, change_passport_h)

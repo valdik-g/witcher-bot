@@ -1,5 +1,6 @@
 class Passport < ApplicationRecord
   has_and_belongs_to_many :kvests
   has_and_belongs_to_many :titles
-  belongs_to :user, inverse_of: 'passport', optional: true
+  has_one :user
+  has_one :user_prerecording, inverse_of: 'passport' 
 end

@@ -2,7 +2,7 @@
 
 # module for ranking up users
 module RankUp
-  def rank_up(message, bot, user, cancel_markup)
+  def rank_up(message, bot, user)
     if user.admin
       output_all_passports(bot, message.chat.id)
       bot.api.send_message(chat_id: message.chat.id, text: 'Выберите того, кому необходимо поднять ранг',

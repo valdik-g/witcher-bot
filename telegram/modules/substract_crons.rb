@@ -2,7 +2,7 @@
 
 # module for substarcting crons from passports inventory
 module SubstractCrons
-  def substract_crons(message, bot, user, cancel_markup)
+  def substract_crons(message, bot, user)
     if user.admin
       output_all_passports(bot, message.chat.id)
       bot.api.send_message(chat_id: message.chat.id, text: 'Кому спишем кроны?',

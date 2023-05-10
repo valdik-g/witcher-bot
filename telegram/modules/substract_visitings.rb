@@ -2,7 +2,7 @@
 
 # module for substracting visiting from subscription
 module SubstractVisitings
-  def substract_visitings(message, bot, user, cancel_markup)
+  def substract_visitings(message, bot, user)
     if user.admin
       output_all_passports(bot, message.chat.id)
       bot.api.send_message(chat_id: message.chat.id, text: 'Выберите тех, кто был на тренировке',

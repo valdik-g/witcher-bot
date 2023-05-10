@@ -2,7 +2,7 @@
 
 # module for adding visitings to subscriptions of users
 module AccrueVisitings
-  def accrue_visitings(message, bot, user, cancel_markup)
+  def accrue_visitings(message, bot, user)
     if user.admin
       output_all_passports(bot, message.chat.id)
       bot.api.send_message(chat_id: message.chat.id,

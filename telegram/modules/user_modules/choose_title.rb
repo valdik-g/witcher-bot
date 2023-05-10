@@ -2,7 +2,7 @@
 
 # mdoule for choosing main title of the player
 module ChooseTitle
-  def choose_title(message, bot, user, cancel_markup)
+  def choose_title(message, bot, user)
     titles = user.passport.titles if user.passport_id
     if titles.nil? || titles.empty?
       bot.api.send_message(chat_id: message.chat.id, text: 'Похоже у вас нет титулов')

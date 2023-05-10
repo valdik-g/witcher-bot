@@ -2,7 +2,7 @@
 
 # module for changing every value in database
 module ChangeRecord
-  def change_record(message, bot, user, cancel_markup)
+  def change_record(message, bot, user)
     if user.admin
       table_message = [User, Passport, Kvest, Title].map.with_index { |table, i| "#{i + 1}: #{table}\n".to_s }.join
       bot.api.send_message(chat_id: message.chat.id,

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 # module for switching between passport and inventory
-module PassportCallbackQuery
-  def get_inventory(message, bot, get_passport_markup)
+module GetInventory
+  def get_inventory(message, bot)
     user = find_or_build_user(message.from)
     passport = user.passport
     inventory = passport.inventory
@@ -11,16 +11,24 @@ module PassportCallbackQuery
     repeat_kvest = repeat_kvest_message(passport.kvest_repeat)
     bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
                               text: "\xF0\x9F\x8E\x92 СУМКА:\n#{inventory}"\
-      "#{additional_kvest}\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(' ').join("\n")}#{if passport.school == 'Школа Змеи'
+      "#{additional_kvest}#{repeat_kvest}\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(' ').join("\n")}#{if passport.school == 'Школа Змеи'
                                                                                                    "\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}\n"
                                                                                                  end}",
                               reply_markup: get_passport_markup)
   end
 
-  def get_passport_back(message, bot, passport_markup)
+  def get_passport_back(message, bot)
     user = find_or_build_user(message.from)
     bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
                               text: output_passport(user.passport_id, user), reply_markup: passport_markup)
+  end
+
+  def get_passport_markup
+    Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: [
+      Telegram::Bot::Types::InlineKeyboardButton.new(
+        text: 'Открыть паспорт', callback_data: 'passport'
+      )
+    ])
   end
 
   private

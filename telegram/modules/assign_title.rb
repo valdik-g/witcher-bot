@@ -2,7 +2,7 @@
 
 # module for assign titles for witchers
 module AssignTitle
-  def assign_title(message, bot, user, cancel_markup)
+  def assign_title(message, bot, user)
     if user.admin
       output_all_passports(bot, message.chat.id)
       bot.api.send_message(chat_id: message.chat.id, text: 'Выберите номер паспорта игрока',

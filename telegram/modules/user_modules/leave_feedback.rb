@@ -2,7 +2,7 @@
 
 # module for leaving feedbacks for users
 module LeaveFeedback
-  def leave_feedback(message, bot, user, feedback_markup)
+  def leave_feedback(message, bot, user)
     if user.passport_id.nil?
       bot.api.send_message(chat_id: message.chat.id,
                            text: 'Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт')
@@ -12,7 +12,7 @@ module LeaveFeedback
     end
   end
 
-  def choose_user_visibility(message, bot, user, cancel_markup)
+  def choose_user_visibility(message, bot, user)
     bot.api.send_message(chat_id: message.chat.id, text: 'Введите ваш отзыв', reply_markup: cancel_markup)
     user.update(step: 'enter_feedback')
     message.text

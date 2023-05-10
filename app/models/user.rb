@@ -1,3 +1,3 @@
 class User < ApplicationRecord
-    belongs_to :passport, class_name: 'Passport', foreign_key: 'passport_id'
+  belongs_to :passport, optional: true
 end

@@ -2,7 +2,8 @@
 
 # module for getting users passport
 module GetPassport
-  def get_passport(message, bot, user, passport_markup)
+
+  def get_passport(message, bot, user)
     if user.passport_id.nil?
       passport = Passport.find_by(telegram_nick: user.username)
       if passport.nil?
@@ -37,10 +38,18 @@ module GetPassport
     message.text
   end
 
-  def input_number(message, bot, user, bd, mail, passport_markup)
+  def input_number(message, bot, user, bd, mail)
     user.passport.update(bd: bd, mail: mail, number: message.text)
     bot.api.send_message(chat_id: message.chat.id, text: output_passport(user.passport_id, user),
                          reply_markup: passport_markup)
     user.update(step: nil)
+  end
+
+  def passport_markup
+    Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: [
+      Telegram::Bot::Types::InlineKeyboardButton.new(
+        text: 'Открыть инвентарь', callback_data: 'inventory'
+      )
+    ])
   end
 end

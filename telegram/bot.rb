@@ -4,67 +4,19 @@ require File.expand_path('../config/environment', __dir__)
 require 'telegram/bot'
 require 'json'
 
-export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord CreateTitle CompleteKvest RankUp
-            SubscriptionInfo SubstractCrons SubstractVisitings CreateKvest OpenPrerecording ClosePrerecording]
-export_for_user = %w[GetPassport GetSubscription UpdateHistory ChangeInfo LeaveFeedback GetPlayer
-                     Birthdays ChooseTitle ChangeDescription PassportCallbackQuery]
+export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording CompleteKvest CreateKvest 
+            CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
+            SubscriptionInfo SubstractCrons SubstractVisitings]
+export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
+                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme UpdateHistory]
 
 options =  %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2]
-
-main_admins_ids = [822_281_212, 612_352_098]
 
 ['./telegram/modules/*.rb', './telegram/modules/user_modules/*.rb'].each { |p| Dir[p].each { |f| require f } }
 export.each { |m| include(Kernel.const_get(m)) }
 export_for_user.each { |m| include(Kernel.const_get(m)) }
 
 token = '5587814730:AAFci39iNXTgIeDLVTvKpCjULW2a94zbuP8'
-
-cancel_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [
-                                                                Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
-                                                              ], resize_keyboard: true)
-
-@admin_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Создать паспорт'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Создать квест'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Создать титул'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Выполнить квест'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Назначить титул'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Изменить запись'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Списать занятия'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Начислить занятия'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Информация по игроку'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Информация по всем абонементам'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Списать кроны'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Повысить ранг'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Уведомление'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Провести турнир'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Открыть предзапись'),
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Закрыть предзапись')
-                                                             ], resize_keyboard: true)
-
-passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: [
-                                                                   Telegram::Bot::Types::InlineKeyboardButton.new(
-                                                                     text: 'Открыть инвентарь', callback_data: 'inventory'
-                                                                   )
-                                                                 ])
-
-@hamon_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [
-                                                               Telegram::Bot::Types::KeyboardButton.new(text: 'Изменить описание')
-                                                             ], resize_keyboard: true)
-
-get_passport_markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: [
-                                                                       Telegram::Bot::Types::InlineKeyboardButton.new(
-                                                                         text: 'Открыть паспорт', callback_data: 'passport'
-                                                                       )
-                                                                     ])
-
-feedback_markup = Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [
-                                                                  Telegram::Bot::Types::KeyboardButton.new(text: 'Анонимно'),
-                                                                  Telegram::Bot::Types::KeyboardButton.new(text: 'Открыто'),
-                                                                  Telegram::Bot::Types::KeyboardButton.new(text: 'Отмена')
-                                                                ], resize_keyboard: true)
-
-@remove_keyboard = Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
 
 Telegram::Bot::Client.run(token) do |bot|
   Sidekiq::Cron::Job.create(
@@ -77,192 +29,100 @@ Telegram::Bot::Client.run(token) do |bot|
     # message = nil
     case message
     when Telegram::Bot::Types::PollAnswer
-      if message.user.id == 612_352_098
-        @choosed_options = message.option_ids.map { |l| options[l.to_i] }
-        Prerecording.last.update(choosed_options: (message.option_ids.map { |l| options[l.to_i] }).join(','))
-        passports = Passport.where('subscription > 0 and subscription < 1000')
-        passports.map do |pass|
-          next if User.find_by(passport_id: pass.id).nil? || User.find_by(passport_id: pass.id).telegram_id.nil?
-
-          bot.api.send_message(chat_id: User.find_by(passport_id: pass.id).telegram_id, text: @vote_message)
-          poll_message_id = bot.api.send_poll(chat_id: User.find_by(passport_id: pass.id).telegram_id,
-                                              question: 'Куда идем?', allows_multiple_answers: true,
-                                              options: @choosed_options, is_anonymous: false)
-          (UserPrerecording.find_by(passport_id: pass.id) || UserPrerecording.create(passport_id: pass.id))
-            .update(message_id: poll_message_id)
-        end
-        return_buttons(User.find_by(telegram_id: 612_352_098), bot, 612_352_098, 'Предзапись открыта')
+      user = User.find_by(telegram_id: message.user.id)
+      if user.step == 'create_prerecording'
+        create_prerecording(message, bot, user, @vote_message)
       elsif Prerecording.last.closed
         bot.api.send_message(chat_id: message.user.id, text: 'Предзапись уже закрыта, ждите дальнейших новостей')
       else
-        UserPrerecording.find_by(passport_id: User.find_by(telegram_id: message.user.id).passport_id).update(days: message.option_ids.join(','))
+        prerecord_user(bot, message, user)
       end
     when Telegram::Bot::Types::CallbackQuery
       case message.data
-      when 'inventory' then get_inventory(message, bot, get_passport_markup)
-      when 'passport'  then get_passport_back(message, bot, passport_markup)
+      when 'inventory' then get_inventory(message, bot)
+      when 'passport'  then get_passport_back(message, bot)
       end
     when Telegram::Bot::Types::Message
-      begin
+      # begin
         user = find_or_build_user(message.from)
-        # if [822_281_212, 612_352_098, 499620114].include?(user.telegram_id)
+        if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
         unless message.text.nil? && !message.text.empty? # && message.document.nil?
           return_buttons(user, bot, message.chat.id, 'Действие отменено') if message.text == 'Отмена'
           case user.step
-          when nil, 'start'
+          when nil
             case message.text
-            when '/start', '/info'
+            when '/start'
               bot.api.send_message(chat_id: message.chat.id,
                                   text: "Привет, я бот клуба 'Свое Дело'!\nСписок моих команд находится внизу, "\
                                         "удачи \xE2\x9D\xA4")
             when '/passport'
-              get_passport(message, bot, user, passport_markup)
+              get_passport(message, bot, user)
             when '/get_best'
-              passport = Passport.order(Arel.sql('CAST(level as integer) DESC')).first
-              bot.api.send_message(chat_id: message.chat.id,
-                                  text: "\xF0\x9F\x94\xA5 Паспорт лучшего игрока \xF0\x9F\x94\xA5")
-              bot.api.send_message(chat_id: message.chat.id,
-                                  text: output_passport(passport.id, user))
+              get_best(message, bot, user)
             when '/get_history'
-              if user.passport_id.nil?
-                bot.api.send_message(chat_id: message.chat.id,
-                                    text: 'Похоже к вам еще не привязан паспорт, используйте кнопку ' \
-                                          'Получить свой паспорт')
-              else
-                history = user.passport.history
-                history = 'История вашего персонажа пуста' if history.empty?
-                bot.api.send_message(chat_id: message.chat.id, text: history)
-              end
+              get_history(message, bot, user)
             when '/update_history'
-              update_history(message, bot, user, cancel_markup)
+              update_history(message, bot, user)
             when '/get_kvests'
-              if user.passport_id.nil?
-                bot.api.send_message(chat_id: message.chat.id,
-                                    text: 'Похоже к вам еще не привязан паспорт, используйте кнопку ' \
-                                          'Получить свой паспорт')
-              else
-                message_kvests = user.passport.kvests.map { |kvest| "#{kvest['kvest_name']}\n" }.join
-                bot.api.send_message(chat_id: message.chat.id, text: "Выполненные квесты:\n\n#{message_kvests}")
-              end
+              get_kvests(message, bot, user)
             when '/change_info'
-              change_info(message, bot, user, cancel_markup)
+              change_info(message, bot, user)
             when '/birthdays'
               birthdays(message.chat.id, bot, user)
             when '/feedback'
-              leave_feedback(message, bot, user, feedback_markup)
+              leave_feedback(message, bot, user)
             when '/choose_title'
-              choose_title(message, bot, user, cancel_markup)
+              choose_title(message, bot, user)
             when '/get_player'
-              get_player(message, bot, user, cancel_markup)
-            when '/mem', "\xF0\x9F\xA4\xA1 Мемчик \xF0\x9F\xA4\xA1"
-              meme = (Dir.entries('/home/cloud-user/witcher-bot/witcher-bot/telegram/memes').reject do |f|
-                        File.directory? f
-                      end).sample
-              bot.api.sendPhoto(chat_id: message.chat.id,
-                                photo: Faraday::UploadIO.new(
-                                  "/home/cloud-user/witcher-bot/witcher-bot/telegram//memes/#{meme}", 'image/jpg'
-                                ))
+              get_player(message, bot, user)
+            when '/mem'
+              meme(message, bot, user)
             when '/subscription'
               get_subscription(message, bot, user)
             when 'Создать паспорт'
-              if user.admin
-                bot.api.send_message(chat_id: message.chat.id, text: 'Введите имя будующего ведьмака:',
-                                    reply_markup: cancel_markup)
-                user.update(step: 'input_name')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
+              create_passport(message, bot, user)
             when 'Изменить запись'
-              change_record(message, bot, user, cancel_markup)
+              change_record(message, bot, user)
             when 'Создать квест'
-              create_kvest(message, bot, user, cancel_markup)
+              create_kvest(message, bot, user)
             when 'Выполнить квест'
-              complete_kvest(message, bot, user, cancel_markup)
+              complete_kvest(message, bot, user)
             when 'Создать титул'
-              create_title(message, bot, user, cancel_markup)
+              create_title(message, bot, user)
             when 'Назначить титул'
-              assign_title(message, bot, user, cancel_markup)
+              assign_title(message, bot, user)
             when 'Списать занятия'
-              substract_visitings(message, bot, user, cancel_markup)
+              substract_visitings(message, bot, user)
             when 'Информация по игроку'
-              output_all_passports(bot, message.chat.id)
-              bot.api.send_message(chat_id: message.chat.id, text: 'Выберите паспорт', reply_markup: cancel_markup)
-              user.update(step: 'input_abon_info')
+              player_info(message, bot, user)
             when 'Информация по всем абонементам'
               subscription_info(message, bot, user)
             when 'Провести турнир'
-              bot.api.send_message(chat_id: message.chat.id, text: "Не протестировано")
+              create_tournamet(message, bot, user)
             when 'Открыть предзапись'
-              if user.admin
-                (Prerecording.last || Prerecording.create).update(closed: false)
-                bot.api.send_message(chat_id: message.chat.id, text: 'Введите сообщение', reply_markup: cancel_markup)
-                user.update(step: 'input_vote_message')
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
-              # open_prerecording(message, bot, user, cancel_markup)
+              open_prerecording(message, bot, user)
             when 'Закрыть предзапись'
-              if user.admin
-                Prerecording.last.update(closed: true)
-                available_records = {}
-                Prerecording.last.choosed_options.split(',') { |l| available_records[l] = 10 }
-                close_message = ''
-                Prerecording.last.choosed_options.split(',').each_with_index do |option, i|
-                  option_prerecord = UserPrerecording.where('days LIKE ?', "%#{i}%")
-                  option_prerecord.each { |_prer| available_records[option] -= 1 }
-                  close_message += option + "\n\n" + (option_prerecord.map do |pr|
-                                                        Passport.find(pr.passport_id).nickname
-                                                      end).join("\n")
-                  close_message += "\n\n"
-                end
-                UserPrerecording.all.each do |pr|
-                  bot.api.send_message(
-                    chat_id: User.find_by(passport_id: pr.passport_id).telegram_id, text: 'Предзапись закрыта'
-                  )
-                end
-                output_string = ''
-                available_records.each { |l| output_string += "#{l[0]}: #{l[1]}\n" }
-                main_admins_ids.each do |admin|
-                  bot.api.send_message(chat_id: admin, text: close_message)
-                  bot.api.send_message(chat_id: admin, text: "Количество свободных мест:\n#{output_string}")
-                end
-                UserPrerecording.update_all(days: '', message_id: nil)
-              else
-                bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
-              end
+              close_prerecording(message, bot, user)
             when 'Списать кроны'
-              substract_crons(message, bot, user, cancel_markup)
+              substract_crons(message, bot, user)
             when 'Начислить занятия'
-              accrue_visitings(message, bot, user, cancel_markup)
+              accrue_visitings(message, bot, user)
             when 'Повысить ранг'
-              rank_up(message, bot, user, cancel_markup)
+              rank_up(message, bot, user)
             when 'Уведомление'
-              notification(message, bot, user, cancel_markup)
+              notification(message, bot, user)
             when '/remove'
-              reply_markup = user.admin ? @admin_markup : @remove_keyboard
-              reply_markup = @hamon_markup if user.telegram_id == 448_768_896
-              bot.api.send_message(chat_id: message.chat.id, text: 'Кнопки убраны)', reply_markup: reply_markup)
+              return_buttons(user, bot, chat_id, 'Кнопки убраны')
             when 'Изменить описание'
-              change_description(message, bot, user, cancel_markup)
+              change_description(message, bot, user)
             end
           # Passport creation
           when 'input_name'
-            @witcher_name = message.text
-            bot.api.send_message(chat_id: message.chat.id, text: 'Введите школу:')
-            user.update(step: 'input_school')
+            @witcher_name = input_name(message, bot, user)
           when 'input_school'
-            school = message.text
-            @passport = Passport.create(nickname: @witcher_name, crons: 0, school: school,
-                                        level: 0, rank: 'Рекрут', additional_kvest: 0, description: 'Отсутствует',
-                                        elixirs: 'Нет')
-            bot.api.send_message(chat_id: message.chat.id, text: 'Введите ник пользователя в телеграмм')
-            user.update(step: 'input_telegram_nick')
+            @passport = input_school(message, bot, user, @witcher_name)
           when 'input_telegram_nick'
-            telegram_nick = message.text
-            @passport.update(telegram_nick: telegram_nick)
-            new_user = User.find_by(username: telegram_nick)
-            new_user&.update(passport_id: @passport.id)
-            return_buttons(user, bot, message.chat.id, 'Запись создана')
+            input_telegram_nick(message, bot, user, @passport)
           when 'change_user_description'
             description = message.text
             user.passport.update(description: description)
@@ -316,34 +176,23 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'input_mail'
             @mail = input_mail(message, bot, user)
           when 'input_number'
-            input_number(message, bot, user, @bd, @mail, passport_markup)
+            input_number(message, bot, user, @bd, @mail)
           when 'input_player_passport_number'
             input_player_passport_number(message, bot, user)
           when 'input_abon_info'
-            passport = Passport.find_by(id: message.text)
-            if passport.nil?
-              return_buttons(user, bot, message.chat.id, 'Некорректный ввод, повторите команду')
-            else
-              return_buttons(user, bot, message.chat.id,
-                             "Имя: #{passport.nickname}\nДень рождения: #{passport.bd}\nНомер телефона: " \
-                             "#{passport.number}\nОстаток абонемента: #{passport.subscription}\nДолг:#{passport.debt}")
-            end
+            input_abon_info(message, bot, user)
           when 'input_change_info_field'
             @update_field = input_change_info_field(message, bot, user)
           when 'input_info_value'
             input_info_value(message, bot, user, @update_field)
           when 'input_vote_message'
-            @vote_message = message.text
-            bot.api.send_poll(chat_id: message.chat.id,
-                              question: 'Какие тренировки планируются?', allows_multiple_answers: true, options: options,
-                              is_anonymous: false)
-            user.update(step: nil)
+            @vote_message = input_vote_message(message, bot, user)
           when 'input_descr_passport'
             @change_passport_h = input_descr_passport(message, bot, user)
           when 'input_new_description'
             input_new_description(message, bot, user, @change_passport_h)
           when 'choose_user_visibility'
-            @send_feedbacks_author = choose_user_visibility(message, bot, user, cancel_markup)
+            @send_feedbacks_author = choose_user_visibility(message, bot, user)
           when 'enter_feedback'
             enter_feedback(message, bot, user, @send_feedbacks_author)
           when 'input_passport_to_substract'
@@ -358,16 +207,27 @@ Telegram::Bot::Client.run(token) do |bot|
             input_passport_rank(message, bot, user)
           when 'input_notification'
             input_notification(message, bot, user)
+          when 'input_tournament_crons'
+            input_tournament_crons(message, bot, user)
+          when 'input_tournament_additional_kvest'
+            input_tournament_additional_kvest(message, bot, user)
+          when 'input_tournament_repeat_kvest'
+            input_tournament_repeat_kvest(message, bot, user)
+          when 'input_tournament_additional_reward'
+            input_tournament_additional_reward(message, bot, user)
+          when 'create_tournament_grid'
+            create_tournament_grid(message, bot, user, message.text.split(' '))
+          when 'choose_winner'
+            choose_winner(message, bot, user)
           end
         end
-        # else
-        #   bot.api.send_message(chat_id: message.chat.id,
-        #                             text: "Ведутся работы, пожалуйста подождите")
-        # end
-      rescue StandardError
-        return_buttons(user, bot, message.chat.id,
-                       'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
-      end
+        else
+          bot.api.send_message(chat_id: message.chat.id, text: "Ведутся работы, пожалуйста подождите")
+        end
+      # rescue StandardError
+      #   return_buttons(user, bot, message.chat.id,
+      #                  'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
+      # end
     end
   end
 end

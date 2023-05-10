@@ -2,7 +2,7 @@
 
 # module for creating titles
 module CreateTitle
-  def create_title(message, bot, user, cancel_markup)
+  def create_title(message, bot, user)
     if user.admin
       bot.api.send_message(chat_id: message.chat.id, text: 'Введите название титула',
                            reply_markup: cancel_markup)
