@@ -46,12 +46,12 @@ module OpenPrerecording
       available_trainings = prerec.available_trainings.split(',').map(&:to_i)
       available_trainings[option.to_i] -= 1
       if available_trainings[option.to_i].zero?
-        # prerec.update(closed_prerecordings: (closed_trainings << option.to_i).join(','))
-        # UserPrerecording.where(voted: false).each do |up|
-        #   bot.api.send_message(chat_id: up.passport.user.telegram_id,
-        #                        text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
-        #                              " закрыта, в случае голосавания голос не будет учтен !!!") if up.passport.user
-        # end
+        prerec.update(closed_prerecordings: (closed_trainings << option.to_i).join(','))
+        UserPrerecording.where(voted: false).each do |up|
+          bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                               text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                     " закрыта, в случае голосавания голос не будет учтен !!!") if up.passport.user
+        end
       end
       prerec.update(available_trainings: available_trainings.join(','))
     end
