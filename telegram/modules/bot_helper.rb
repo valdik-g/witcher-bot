@@ -25,17 +25,30 @@ module BotHelper
 
   def output_passport(passport_id, user)
     passport = Passport.find(passport_id)
-    kvests = passport.kvests.map { |kvest| "-#{kvest.kvest_name}\n" }.join
-    long_kvest = passport.long_kvest_id.nil? ? 'Нет' : Kvest.find_by(id: passport.long_kvest_id).kvest_name
-    title = passport.main_title_id.nil? ? 'Отсутствует' : Title.find_by(id: passport.main_title_id).title_name
     "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl\nРАНГ - #{passport.rank}\n
-\xF0\x9F\x8F\xB0 Школа: #{passport.school}\n\n\xF0\x9F\x93\xAF Титул: #{title}\n
-\xE2\x9D\x93 Проходит квест:\n#{long_kvest}
-#{if user.admin && passport.id != user.passport_id
-"\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests || "Кажется игрок еще не выполнил ни одного квеста!\n"}"
-end}
+\xF0\x9F\x8F\xB0 Школа: #{passport.school}\n\n#{passports_title(passport)}
+#{long_kvest(passport)}#{completed_kvests(user, passport)}
 \xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}\n
 \xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99"
+  end
+
+  def passports_title(passport)
+    title = passport.main_title_id.nil? ? 'Отсутствует' : Title.find_by(id: passport.main_title_id).title_name
+    "\xF0\x9F\x93\xAF Титул: #{title}\n"
+  end
+
+  def long_kvest(passport)
+    long_kvest = passport.long_kvest_id.nil? ? 'Нет' : Kvest.find_by(id: passport.long_kvest_id).kvest_name
+    "\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n\n"
+  end
+
+  def completed_kvests(user, passport)
+    if user.admin && passport.id != user.passport_id
+      kvests = passport.kvests.map { |kvest| "-#{kvest.kvest_name}\n" }.join
+      "\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests || "Кажется игрок еще не выполнил ни одного квеста!"}\n\n"
+    else
+      ''
+    end
   end
 
   def admin_markup
@@ -45,9 +58,10 @@ end}
   end
 
   def admin_buttons
-    ['Создать паспорт', 'Создать квест', 'Создать титул', 'Выполнить квест', 'Назначить титул', 'Изменить запись',
-     'Списать занятия', 'Начислить занятия', 'Информация по игроку', 'Информация по всем абонементам', 'Списать кроны',
-     'Повысить ранг', 'Уведомление', 'Провести турнир', 'Открыть предзапись', 'Закрыть предзапись']
+    ['Создать паспорт', 'Создать квест', 'Создать титул', 'Выполнить квест', 'Повторить квест', 'Назначить титул', 
+     'Изменить запись', 'Списать занятия', 'Начислить занятия', 'Информация по игроку',
+     'Информация по всем абонементам', 'Списать кроны', 'Повысить ранг', 'Уведомление', 'Провести турнир',
+     'Открыть предзапись', 'Закрыть предзапись']
   end
 
   def hamon_markup

@@ -39,7 +39,7 @@ module GetInventory
   def special_items_message(additional_kvest, repeat_kvest)
     add_kvest = additional_kvest_message(additional_kvest)
     rep_kvest = repeat_kvest_message(repeat_kvest)
-    add_kvest.blank? && rep_kvest.blank? ? '' : "\nСпециальные предметы: \n#{add_kvest}#{rep_kvest}"
+    add_kvest.blank? && rep_kvest.blank? ? '' : "\nСпециальные предметы: \n#{add_kvest}#{rep_kvest}\n"
   end
 
   def additional_kvest_message(additional_kvest)
@@ -48,11 +48,11 @@ module GetInventory
 
   # \xF0\x9F\x8E\x9F\xEF\xB8\x8F Специальные предметы:\n
   def repeat_kvest_message(repeat_kvest)
-    repeat_kvest.zero? ? '' : "Свиток дополнительного квеста #{repeat_kvest} штук(и)\n\n"
+    repeat_kvest.zero? ? '' : "Свиток повторного квеста #{repeat_kvest} штук(и)\n"
   end
 
   def elixirs_message(passport)
-    "\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(' ').join("\n")}"
+    passport.elixirs.blank? ? '' : "\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(',').join("\n")}"
   end
 
   def familiars_message(passport)

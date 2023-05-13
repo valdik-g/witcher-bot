@@ -19,15 +19,15 @@ module SubstractVisitings
       next unless passport
 
       passport.update(subscription: passport.subscription - 1)
-      if passport.subscription <= 3 && passport.subscription != 0
-        unless User.find_by(passport_id: passport.id).nil?
-          bot.api.send_message(chat_id: User.find_by(passport_id: passport.id).telegram_id,
+      if passport.subscription <= 3 && !passport.subscription.zero?
+        unless passport.user.nil?
+          bot.api.send_message(chat_id: passport.user.telegram_id,
                                text: "У вас осталось #{passport.subscription} занятий в абонементе")
         end
       elsif passport.subscription.zero?
         bot.api.send_message(chat_id: 612_352_098,
                              text: "\xE2\x9A\xA0\xEF\xB8\x8F У #{passport.nickname} закончился абонемент \xE2\x9A\xA0\xEF\xB8\x8F")
-        bot.api.send_message(chat_id: User.find_by(passport_id: passport.id).telegram_id,
+        bot.api.send_message(chat_id: passport.user.telegram_id,
                              text: "Ваш абонемент закончился \xF0\x9F\x98\xA2\nБегом за новым \xF0\x9F\x8F\x83")
       end
     end

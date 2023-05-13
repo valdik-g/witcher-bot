@@ -5,6 +5,8 @@ module OpenPrerecording
   def open_prerecording(message, bot, user)
     if user.admin
       (Prerecording.last || Prerecording.create).update(closed: false)
+      UserPrerecording.update_all(days: '', voted: false)
+      Prerecording.last.update(:choosed_options => '', :available_trainings => '', :closed_prerecordings => '')
       bot.api.send_message(chat_id: message.chat.id, text: 'Введите сообщение', reply_markup: cancel_markup)
       user.update(step: 'input_vote_message')
     else

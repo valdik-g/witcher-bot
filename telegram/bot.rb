@@ -8,7 +8,7 @@ export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
             SubscriptionInfo SubstractCrons SubstractVisitings]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
-                      GetPassport GetPlayer GetPrerecording GetSubscription LeaveFeedback Meme UpdateHistory]
+                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme UpdateHistory]
 
 options =  %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2]
 
@@ -45,7 +45,7 @@ Telegram::Bot::Client.run(token) do |bot|
     when Telegram::Bot::Types::Message
      begin
         user = find_or_build_user(message.from)
-        # if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
+        #if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
         unless message.text.nil? && !message.text.empty? # && message.document.nil?
           return_buttons(user, bot, message.chat.id, 'Действие отменено') if message.text == 'Отмена'
           case user.step
@@ -80,7 +80,7 @@ Telegram::Bot::Client.run(token) do |bot|
             when '/subscription'
               get_subscription(message, bot, user)
             when '/prerecording'
-              get_prerecording(message.chat.id, bot)
+              bot.api.send_message(chat_id: message.chat.id, text: Prerecording.last.close_message)
             when 'Создать паспорт'
               create_passport(message, bot, user)
             when 'Изменить запись'
