@@ -5,7 +5,7 @@ module SubscriptionInfo
   def subscription_info(message, bot, user)
     if user.admin
       passports_message = Passport.all.map do |passport|
-        "#{passport.nickname}: #{passport.subscription}\n" if passport.subscription.to_i < 1000
+        "#{passport.nickname}: #{passport.subscription}\n" if passport.subscription.to_i < 500
       end.join
       bot.api.send_message(chat_id: message.chat.id, text: passports_message)
     else

@@ -9,7 +9,7 @@ module GetSubscription
     elsif user.passport.subscription.to_i >= 500
       bot.api.send_message(chat_id: message.chat.id, text: "\xF0\x9F\x8E\x89 Поздравляю! Ты блатной")
     else
-      subscription_info(message, bot, user)
+      subscription_info_about(message, bot, user)
     end
   end
 
@@ -23,7 +23,7 @@ module GetSubscription
 
   private
   
-  def subscription_info(message, bot, user)
+  def subscription_info_about(message, bot, user)
     subscription = user.passport.subscription
     debt = user.passport.debt
     subs_message = "\xF0\x9F\x92\xB3 Абонемент: "
