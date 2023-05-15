@@ -8,7 +8,7 @@ export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
             SubscriptionInfo SubstractCrons SubstractVisitings]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
-                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme UpdateHistory]
+                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
 
 options =  %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2]
 
@@ -43,9 +43,9 @@ Telegram::Bot::Client.run(token) do |bot|
       when 'passport'  then get_passport_back(message, bot)
       end
     when Telegram::Bot::Types::Message
-     begin
+      # begin
         user = find_or_build_user(message.from)
-        #if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
+        if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
         unless message.text.nil? && !message.text.empty? # && message.document.nil?
           return_buttons(user, bot, message.chat.id, 'Действие отменено') if message.text == 'Отмена'
           case user.step
@@ -68,7 +68,7 @@ Telegram::Bot::Client.run(token) do |bot|
             when '/change_info'
               change_info(message, bot, user)
             when '/birthdays'
-              birthdays(message.chat.id, bot, user)
+              birthdays(message.chat.id, bot)
             when '/feedback'
               leave_feedback(message, bot, user)
             when '/choose_title'
@@ -79,6 +79,8 @@ Telegram::Bot::Client.run(token) do |bot|
               meme(message, bot, user)
             when '/subscription'
               get_subscription(message, bot, user)
+            when '/transfer_crons'
+              transfer_crons(message, bot, user)
             when '/prerecording'
               bot.api.send_message(chat_id: message.chat.id, text: Prerecording.last.close_message)
             when 'Создать паспорт'
@@ -221,15 +223,19 @@ Telegram::Bot::Client.run(token) do |bot|
             create_tournament_grid(message, bot, user, message.text.split(' '))
           when 'choose_winner'
             choose_winner(message, bot, user)
+          when 'input_passport_to_transfer'
+            @passport_id = input_passport_to_transfer(message, bot, user)
+          when 'transfer_crons'
+            user.passport.transfer_crons(message.text.to_i, @passport_id, message.chat.id, bot, user)
           end
         end
-        # else
-        #   bot.api.send_message(chat_id: message.chat.id, text: "Ведутся работы, пожалуйста подождите")
-        # end
-      rescue StandardError
-        return_buttons(user, bot, message.chat.id,
-                       'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
-      end
+        else
+          bot.api.send_message(chat_id: message.chat.id, text: "Ведутся работы, пожалуйста подождите")
+        end
+      # rescue StandardError
+      #   return_buttons(user, bot, message.chat.id,
+      #                  'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
+      # end
     end
   end
 end

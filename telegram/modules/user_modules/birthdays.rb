@@ -2,7 +2,7 @@
 
 # module for getting birthdays of players for 40 days
 module Birthdays
-  def birthdays(chat_id, bot, _user)
+  def birthdays(chat_id, bot)
     birthday_message = sorted_passports.map do |pass|
       bd = pass.bd.split('.')
       next unless this_month_condition(bd) || next_month_condition(bd)

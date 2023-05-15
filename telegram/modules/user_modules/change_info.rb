@@ -3,11 +3,11 @@
 # module for changing personal info
 module ChangeInfo
   def change_info(message, bot, user)
-    if user.passport
+    unless user.passport
       bot.api.send_message(chat_id: message.chat.id,
                            text: 'Похоже к вам еще не привязан паспорт, используйте кнопку Получить свой паспорт')
     else
-      bot.api.send_message(chat_id: message.chat.id, text: personal_info(user.passport))
+      bot.api.send_message(chat_id: message.chat.id, text: personal_info_message(user.passport))
       bot.api.send_message(chat_id: message.chat.id, text: change_info_message, reply_markup: cancel_markup)
       user.update(step: 'input_change_info_field')
     end
