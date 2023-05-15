@@ -4,7 +4,7 @@
 module TransferCrons
   def transfer_crons(message, bot, user)
     output_all_passports(bot, message.chat.id)
-    bot.api.send_message(chat_id: message.chat.id, text: 'Кому переведем кроны?')
+    bot.api.send_message(chat_id: message.chat.id, text: 'Кому переведем кроны?', reply_markup: cancel_markup)
     user.update(step: 'input_passport_to_transfer')
   end
 
