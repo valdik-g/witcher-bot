@@ -7,7 +7,7 @@ class Passport < ApplicationRecord
   def transfer_crons(crons, passport_id, chat_id, bot, user)
     to_transfer = Passport.find_by(id: passport_id)
     unless to_transfer.nil?
-      if crons < 0 || crons > self.crons
+      if crons < 0 || crons > self.crons || passport_id == user.passport.id
         return_buttons(user, bot, chat_id, 'Э бля, так нельзя')
       else
         to_transfer.update(crons: to_transfer.crons + crons)
