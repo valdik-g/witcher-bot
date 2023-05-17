@@ -91,6 +91,7 @@ Telegram::Bot::Client.run(token) do |bot|
               create_kvest(message, bot, user)
             when 'Выполнить квест'
               complete_kvest(message, bot, user)
+              @repeat = false
             when 'Повторить квест'
               complete_kvest(message, bot, user)
               @repeat = true
