@@ -91,6 +91,9 @@ Telegram::Bot::Client.run(token) do |bot|
               create_kvest(message, bot, user)
             when 'Выполнить квест'
               complete_kvest(message, bot, user)
+            when 'Повторить квест'
+              complete_kvest(message, bot, user)
+              @repeat = true
             when 'Создать титул'
               create_title(message, bot, user)
             when 'Назначить титул'
@@ -152,7 +155,7 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'input_passport_number'
             @passport_number = input_passport_number(message, bot, user)
           when 'input_kvest_number'
-            input_kvest_number(message, bot, user, @passport_number)
+            input_kvest_number(message, bot, user, @passport_number, @repeat)
           when 'input_title_name'
             @title_name = input_title_name(message, bot, user)
           when 'input_title_description'

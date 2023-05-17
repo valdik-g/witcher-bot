@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_04_07_065111) do
+ActiveRecord::Schema[7.0].define(version: 2023_05_03_071903) do
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -67,6 +67,8 @@ ActiveRecord::Schema[7.0].define(version: 2023_04_07_065111) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "choosed_options", default: ""
+    t.string "closed_prerecordings", default: ""
+    t.string "available_trainings", default: ""
   end
 
   create_table "titles", force: :cascade do |t|
@@ -81,9 +83,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_04_07_065111) do
     t.integer "additional_kvest"
     t.integer "repeat_kvest"
     t.string "pairs"
-    t.string "winneres"
+    t.string "winners"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "additional_reward"
   end
 
   create_table "user_prerecordings", force: :cascade do |t|

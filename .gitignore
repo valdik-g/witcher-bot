@@ -36,3 +36,4 @@
 /config/master.key
 
 /vendor/*
+/telegram/test_text_file
