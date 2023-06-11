@@ -17,10 +17,10 @@ module BotHelper
       passports_message += Passport.where(school: school).map { |p| "#{p.id}: #{p.nickname}\n" }.join
       passports_message += "\n"
     end
-    unknown = Passport.where(school: 'Неизвестно').map { |p| "#{p.id}: #{p.nickname}\n" }.join
+    unknown = Passport.where(school: 'Неизвестно').map { |p| "#{p.id}: #{p.nickname}\n" }
     unless unknow.empty?
       passports_message += "Не определились:\n\n"
-      passports_message += Passport.where(school: 'Неизвестно').map { |p| "#{p.id}: #{p.nickname}\n" }.join
+      passports_message += unknow.join
     end
     bot.api.send_message(chat_id: chat_id, text: passports_message)
   end
