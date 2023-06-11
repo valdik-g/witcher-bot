@@ -21,7 +21,7 @@ module AssignTitle
     message.text
   end
 
-  def choose_title(message, bot, user, passport_id)
+  def choose_title_to_assign(message, bot, user, passport_id)
     title = Title.find_by(id: message.text)
     passport = Passport.find_by(id: passport_id)
     if title && passport

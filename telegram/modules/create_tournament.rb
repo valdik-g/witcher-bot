@@ -74,6 +74,7 @@ module CreateTournament
 
   def choose_winner(message, bot, user)
     t = Tournament.last
+    p = Passport.find_by(id: message.text)
     new_pairs = t.pairs.split("\n")
     new_pairs.delete(t.pairs.split("\n")[0])
     t.update(pairs: new_pairs.join("\n"))

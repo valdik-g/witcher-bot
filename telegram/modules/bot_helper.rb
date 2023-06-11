@@ -10,7 +10,15 @@ module BotHelper
   end
 
   def output_all_passports(bot, chat_id)
-    passports_message = Passport.all.map { |p| "#{p.id}: #{p.nickname}\n" }.join
+    schools = ['Школа Волка', 'Школа Мантикоры', 'Школа Кота', 'Школа Змеи', 'Школа Медведя', 'Школа Грифона']
+    passports_message = ''
+    schools.each do |school|
+      passports_message += school + ":\n\n"
+      passports_message += Passport.where(school: school).map { |p| "#{p.id}: #{p.nickname}\n" }.join
+      passports_message += "\n"
+    end
+    passports_message += "Не определились:\n\n"
+    passports_message += Passport.where(school: '').map { |p| "#{p.id}: #{p.nickname}\n" }.join
     bot.api.send_message(chat_id: chat_id, text: passports_message)
   end
 

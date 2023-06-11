@@ -7,7 +7,9 @@ module ClosePrerecording
       prerecording.update(closed: true)
       av_trainings = prerecording.available_trainings.split(',')
       UserPrerecording.all.each do |pr|
-        bot.api.send_message(chat_id: User.find_by(passport_id: pr.passport_id).telegram_id, text: 'Предзапись закрыта')
+        if Passport.find_by(id: pr.passport_id)
+          bot.api.send_message(chat_id: User.find_by(passport_id: pr.passport_id).telegram_id, text: 'Предзапись закрыта')
+        end
       end
       output_string = prerecording.choosed_options.split(',').each_with_index.map { |l, i| "#{l}: #{av_trainings[i]}\n" }.join
       User.where(admin: true).collect(&:telegram_id).each do |admin|

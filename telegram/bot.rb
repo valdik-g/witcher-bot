@@ -174,7 +174,7 @@ Telegram::Bot::Client.run(token) do |bot|
           when 'input_pasport_title'
             @passport_id = input_pasport_title(message, bot, user)
           when 'choose_title'
-            choose_title(message, bot, user, @passport_id)
+            choose_title_to_assign(message, bot, user, @passport_id)
           when 'input_main_title'
             input_main_title(message, bot, user)
           when 'input_substract'
