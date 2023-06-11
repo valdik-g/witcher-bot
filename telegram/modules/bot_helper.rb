@@ -18,9 +18,9 @@ module BotHelper
       passports_message += "\n"
     end
     unknown = Passport.where(school: 'Неизвестно').map { |p| "#{p.id}: #{p.nickname}\n" }
-    unless unknow.empty?
+    unless unknown.empty?
       passports_message += "Не определились:\n\n"
-      passports_message += unknow.join
+      passports_message += unknown.join
     end
     bot.api.send_message(chat_id: chat_id, text: passports_message)
   end
