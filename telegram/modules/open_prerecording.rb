@@ -16,7 +16,8 @@ module OpenPrerecording
 
   def input_vote_message(message, bot, user)
     bot.api.send_poll(chat_id: message.chat.id, question: 'Какие тренировки планируются?', 
-                      allows_multiple_answers: true, options: %w[Пт Сб1 Сб2 Вс0 Вс1 Вс2], is_anonymous: false)
+                      allows_multiple_answers: true, options: ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
+                        "Сб3\xf0\x9f\x8f\xb9" "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"], is_anonymous: false)
     user.update(step: 'create_prerecording')
     message.text
   end
@@ -41,9 +42,23 @@ module OpenPrerecording
 
   def prerecord_user(bot, message, user)
     prerec = Prerecording.last
+    user_prerec = user.passport.user_prerecording
     closed_trainings = prerec.closed_prerecordings.split(',')
-    user.passport.user_prerecording
-    .update(days: message.option_ids.excluding(closed_trainings.map(&:to_i)).join(','), voted: true)
+    if user_prerec.voted
+      user_prerec.days.split(',').each do |option|
+        available_trainings = prerec.available_trainings.split(',').map(&:to_i)
+        if available_trainings[option.to_i] == 0
+          UserPrerecording.where(voted: false).each do |up|
+            bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                                 text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                       " снова открыта, скорее забирайте !!!") if up.passport.user
+          end
+        end
+        available_trainings[option.to_i] += 1
+        prerec.update(available_trainings: available_trainings.join(','))
+      end
+    end
+    user_prerec.update(days: message.option_ids.excluding(closed_trainings.map(&:to_i)).join(','), voted: true)
     message.option_ids.excluding(closed_trainings.map(&:to_i)).each do |option|
       available_trainings = prerec.available_trainings.split(',').map(&:to_i)
       available_trainings[option.to_i] -= 1
