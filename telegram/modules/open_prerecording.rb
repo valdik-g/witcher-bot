@@ -25,8 +25,9 @@ module OpenPrerecording
   def create_prerecording(message, bot, user, vote_message)
     choosed_options = message.option_ids.map { |l| ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
       "Сб3\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"][l.to_i] }
+    available_trainings = choosed_options.map { |c| c.include?("\xf0\x9f\x8f\xb9") ? 5 : 10 }
     Prerecording.last.update(choosed_options: choosed_options.join(','), 
-                             available_trainings: (Array.new(choosed_options.length) {|z| 10}).join(','))
+                             available_trainings: available_trainings.join(','))
     passports = Passport.where('subscription > 0 and subscription < 1000')
     passports.map do |pass|
       next if User.find_by(passport_id: pass.id).nil? || User.find_by(passport_id: pass.id).telegram_id.nil?
