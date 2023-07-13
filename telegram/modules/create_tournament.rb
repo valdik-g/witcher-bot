@@ -36,14 +36,8 @@ module CreateTournament
 
   def create_tournament_grid(message, bot, user, members)
     pair_list = get_pairs(members)
-    members.each do |id| 
-      p = Passport.find(id)
-      bot.api.send_message(chat_id: message.chat.id, text: 'Турнирная сетка:')
-      bot.api.send_message(chat_id: message.chat.id, text: pair_list)
-      # p.update(step: 'tournament_bet') unless pair_id_list.split("\n")[0].split(' ')
-    end
-
-    # user.update(step: nil)
+    bot.api.send_message(chat_id: message.chat.id, text: 'Турнирная сетка:')
+    bot.api.send_message(chat_id: message.chat.id, text: pair_list)
     fight(message, bot, user)
     user.update(step: 'choose_winner')
   end
@@ -60,11 +54,16 @@ module CreateTournament
         sample = members.sample
         pair2 = Passport.find(sample)
         members.delete(sample)
-        pair_list += "#{Title.find_by(id: pair1.main_title_id) || ''} #{pair1.nickname}" \
-        " - #{Title.find_by(id: pair2.main_title_id) || ''} #{pair2.nickname} \n"
+        title_1 = Title.find_by(id: pair1.main_title_id)
+        title_2 = Title.find_by(id: pair2.main_title_id)
+        title_name_1 = title_1 ? "#{title_1.title_name} " : ''
+        title_name_2 = title_2 ? "#{title_2.title_name} " : ''
+        pair_list += "#{title_name_1}#{pair1.nickname} - #{title_name_2}#{pair2.nickname} \n"
         pair_id_list += "#{pair1.id} #{pair2.id}\n"
       else
-        pair_list += "#{Title.find_by(id: pair1.main_title_id) || ''} #{pair1.nickname} \n"
+        title_1 = Title.find_by(id: pair1.main_title_id)
+        title_name_1 = title_1 ? "#{title_1.title_name} " : ''
+        pair_list += "#{title_name_1} #{pair1.nickname} \n"
         Tournament.last.update(winners: pair1.id.to_s)
       end
     end
@@ -93,8 +92,7 @@ module CreateTournament
       end
       p.update(crons: p.crons + t.crons, additional_kvest: p.additional_kvest + t.additional_kvest,
               kvest_repeat: p.kvest_repeat + t.repeat_kvest, inventory: new_inventory)
-      bot.api.send_message(chat_id: message.chat.id, text: 'Награда проставлена победителю, турнир окончен')
-      user.update(step: nil)
+      return_buttons(user, bot, message.chat.id, 'Награда проставлена победителю, турнир окончен')
     else
       fight(message, bot, user)
     end
@@ -104,12 +102,9 @@ module CreateTournament
     t = Tournament.last
     if t.pairs.blank? && !t.winners.blank?
       pair_list = get_pairs(t.winners.split(' ')) 
-      members.each do |id| 
-        p = Passport.find(id)
-        bot.api.send_message(chat_id: message.chat.id, text: 'Турнирная сетка:')
-        bot.api.send_message(chat_id: message.chat.id, text: pair_list)
-        # p.update(step: 'tournament_bet') unless pair_id_list.split("\n")[0].split(' ')
-      end
+      bot.api.send_message(chat_id: message.chat.id, text: 'Турнирная сетка:')
+      bot.api.send_message(chat_id: message.chat.id, text: pair_list)
+      # p.update(step: 'tournament_bet') unless pair_id_list.split("\n")[0].split(' ')
     end
     t = Tournament.last
     pair_list = t.pairs

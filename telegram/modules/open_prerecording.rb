@@ -28,16 +28,14 @@ module OpenPrerecording
     available_trainings = choosed_options.map { |c| c.include?("\xf0\x9f\x8f\xb9") ? 5 : 10 }
     Prerecording.last.update(choosed_options: choosed_options.join(','), 
                              available_trainings: available_trainings.join(','))
-    passports = Passport.where('subscription > 0 and subscription < 1000')
+    passports = Passport.where('subscription > 0 and subscription < 300')
     passports.map do |pass|
-      next if User.find_by(passport_id: pass.id).nil? || User.find_by(passport_id: pass.id).telegram_id.nil?
-
-      bot.api.send_message(chat_id: User.find_by(passport_id: pass.id).telegram_id, text: vote_message)
-      poll_message_id = bot.api.send_poll(chat_id: User.find_by(passport_id: pass.id).telegram_id,
-                                          question: 'Куда идем?', allows_multiple_answers: true,
-                                          options: choosed_options, is_anonymous: false)
-      (UserPrerecording.find_by(passport_id: pass.id) || UserPrerecording.create(passport_id: pass.id))
-        .update(message_id: poll_message_id)
+      unless pass.user.nil? || pass.user.telegram_id.nil?
+        bot.api.send_message(chat_id: pass.user.telegram_id, text: vote_message)
+        bot.api.send_poll(chat_id: pass.user.telegram_id,
+                                            question: 'Куда идем?', allows_multiple_answers: true,
+                                            options: choosed_options, is_anonymous: false)
+      end
     end
     return_buttons(user, bot, message.user.id, 'Предзапись создана')
   end
