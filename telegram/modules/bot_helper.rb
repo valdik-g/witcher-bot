@@ -34,12 +34,16 @@ module BotHelper
     user || User.create(telegram_id: user_obj.id, username: username)
   end
 
+  def get_buffs(passport_id)
+    buffs = Passport.find(passport_id).buffs.map { |b| "#{b.buff_name}:\n#{b.buff_description}\n" }.join("\n")
+    buffs.empty? ? "\n" : "\n\n\xE2\x86\x95Баффы/Дебаффы:\n" + buffs
+  end
+
   def output_passport(passport_id, user)
     passport = Passport.find(passport_id)
     "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl\nРАНГ - #{passport.rank}\n
 \xF0\x9F\x8F\xB0 Школа: #{passport.school}\n\n#{passports_title(passport)}
-#{long_kvest(passport)}#{completed_kvests(user, passport)}
-\xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}\n
+#{long_kvest(passport)}#{completed_kvests(user, passport)}\xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}#{get_buffs(passport_id)}
 \xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99"
   end
 
@@ -55,8 +59,8 @@ module BotHelper
 
   def completed_kvests(user, passport)
     if user.admin && passport.id != user.passport_id
-      kvests = passport.kvests.map { |kvest| "-#{kvest.kvest_name}\n" }.join
-      "\n\xE2\x9D\x94 Пройденные квесты:\n#{kvests || "Кажется игрок еще не выполнил ни одного квеста!"}\n\n"
+      kvests = passport.kvests.map { |kvest| "-#{kvest.kvest_name}" }.join("\n")
+      "\xE2\x9D\x94 Пройденные квесты:\n#{kvests || "Кажется игрок еще не выполнил ни одного квеста!"}\n\n"
     else
       ''
     end
