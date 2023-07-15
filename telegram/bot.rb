@@ -6,7 +6,7 @@ require 'json'
 
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording CompleteKvest CreateKvest 
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
-            SubscriptionInfo SubstractCrons SubstractVisitings]
+            SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
                       GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
 
@@ -46,7 +46,7 @@ Telegram::Bot::Client.run(token) do |bot|
     when Telegram::Bot::Types::Message
       begin
         user = find_or_build_user(message.from)
-        #if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
+        # if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
         unless message.text.nil? && !message.text.empty? # && message.document.nil?
           return_buttons(user, bot, message.chat.id, 'Действие отменено') if message.text == 'Отмена'
           case user.step
@@ -127,6 +127,8 @@ Telegram::Bot::Client.run(token) do |bot|
               return_buttons(user, bot, message.chat.id, 'Кнопки убраны')
             when 'Изменить описание'
               change_description(message, bot, user)
+            when 'Добавить предмет'
+              choose_players_inventory(message, bot, user)
             end
           # Passport creation
           when 'input_name'
@@ -235,6 +237,10 @@ Telegram::Bot::Client.run(token) do |bot|
             @passport_id = input_passport_to_transfer(message, bot, user)
           when 'transfer_crons'
             user.passport.transfer_crons(message.text.to_i, @passport_id, message.chat.id, bot, user)
+          when 'choose_item_to_add'
+            @players = choose_item_to_add(message, bot, user)
+          when 'add_item_to_inventory'
+            add_item_to_inventory(message, bot, user, @players)
           end
         end
         # else

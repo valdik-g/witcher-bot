@@ -26,7 +26,7 @@ module CompleteKvest
     function = repeat ? 'add_kvest' : 'add_notrepeated_kvest'
     kvests_number = message.text.split(' ')
     passport_number.split(' ').map do |pass_number|
-      passport = Passport.find(pass_number)
+      passport = Passport.find_by(id: pass_number)
       next unless passport
 
       kvests_number.map do |number|
