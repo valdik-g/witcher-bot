@@ -44,18 +44,23 @@ module OpenPrerecording
     prerec = Prerecording.last
     user_prerec = user.passport.user_prerecording
     closed_trainings = prerec.closed_prerecordings.split(',')
-    if user_prerec.voted
-      user_prerec.days.split(',').each do |option|
-        available_trainings = prerec.available_trainings.split(',').map(&:to_i)
-        if available_trainings[option.to_i] == 0
-          UserPrerecording.where(voted: false).each do |up|
-            bot.api.send_message(chat_id: up.passport.user.telegram_id,
-                                 text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
-                                       " снова открыта, скорее забирайте !!!") if up.passport.user
+    if user_prerec
+      if user_prerec.voted
+        user_prerec.days.split(',').each do |option|
+          available_trainings = prerec.available_trainings.split(',').map(&:to_i)
+          if available_trainings[option.to_i] == 0
+            UserPrerecording.where(voted: false).each do |up|
+              if up.passport
+                bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                                    text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                          " снова открыта, скорее забирайте !!!") if up.passport.user
+
+              end
+            end
           end
+          available_trainings[option.to_i] += 1
+          prerec.update(available_trainings: available_trainings.join(','))
         end
-        available_trainings[option.to_i] += 1
-        prerec.update(available_trainings: available_trainings.join(','))
       end
     end
     user_prerec.update(days: message.option_ids.excluding(closed_trainings.map(&:to_i)).join(','), voted: true)
