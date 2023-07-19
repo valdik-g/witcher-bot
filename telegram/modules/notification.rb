@@ -12,8 +12,12 @@ module Notification
   end
 
   def input_notification(message, bot, user)
-    Passport.all.each do |p|  
-      bot.api.send_message(chat_id: p.user.telegram_id, text: message.text) unless p.user.nil? || p.user.telegram_id.nil?
+    Passport.all.each do |p|
+      begin
+        bot.api.send_message(chat_id: p.user.telegram_id, text: message.text) unless p.user.nil? || p.user.telegram_id.nil?
+      rescue
+        p "Пользователь #{pass.user} заблокировал бота"
+      end
     end
     return_buttons(user, bot, message.chat.id, 'Сообщение отправлено')
   end

@@ -44,7 +44,7 @@ Telegram::Bot::Client.run(token) do |bot|
       when 'passport'  then get_passport_back(message, bot)
       end
     when Telegram::Bot::Types::Message
-      # begin
+      begin
         user = find_or_build_user(message.from)
         # if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
         unless message.text.nil? && !message.text.empty? # && message.document.nil?
@@ -246,10 +246,10 @@ Telegram::Bot::Client.run(token) do |bot|
         # else
         #   bot.api.send_message(chat_id: message.chat.id, text: "Ведутся работы, пожалуйста подождите")
         # end
-      # rescue StandardError
-      #   return_buttons(user, bot, message.chat.id,
-      #                  'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
-      # end
+      rescue StandardError
+        return_buttons(user, bot, message.chat.id,
+                       'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
+      end
     end
   end
 end

@@ -31,10 +31,14 @@ module OpenPrerecording
     passports = Passport.where('subscription > 0 and subscription < 1000')
     passports.map do |pass|
       unless pass.user.nil? || pass.user.telegram_id.nil?
-        bot.api.send_message(chat_id: pass.user.telegram_id, text: vote_message)
-        bot.api.send_poll(chat_id: pass.user.telegram_id,
-                                            question: 'Куда идем?', allows_multiple_answers: true,
-                                            options: choosed_options, is_anonymous: false)
+        begin
+          bot.api.send_message(chat_id: pass.user.telegram_id, text: vote_message)
+          bot.api.send_poll(chat_id: pass.user.telegram_id,
+                                              question: 'Куда идем?', allows_multiple_answers: true,
+                                              options: choosed_options, is_anonymous: false)
+        rescue
+          p "Пользователь #{pass.user} заблокировал бота"
+        end
       end
     end
     return_buttons(user, bot, message.user.id, 'Предзапись создана')
