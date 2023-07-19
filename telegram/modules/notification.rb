@@ -16,7 +16,7 @@ module Notification
       begin
         bot.api.send_message(chat_id: p.user.telegram_id, text: message.text) unless p.user.nil? || p.user.telegram_id.nil?
       rescue
-        p "Пользователь #{pass.user} заблокировал бота"
+        p "Пользователь #{pass.user.username} заблокировал бота"
       end
     end
     return_buttons(user, bot, message.chat.id, 'Сообщение отправлено')

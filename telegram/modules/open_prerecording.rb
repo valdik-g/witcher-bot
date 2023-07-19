@@ -37,7 +37,7 @@ module OpenPrerecording
                                               question: 'Куда идем?', allows_multiple_answers: true,
                                               options: choosed_options, is_anonymous: false)
         rescue
-          p "Пользователь #{pass.user} заблокировал бота"
+          p "Пользователь #{pass.user.username} заблокировал бота"
         end
       end
     end
