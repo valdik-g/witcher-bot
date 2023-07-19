@@ -28,7 +28,7 @@ module OpenPrerecording
     available_trainings = choosed_options.map { |c| c.include?("\xf0\x9f\x8f\xb9") ? 5 : 10 }
     Prerecording.last.update(choosed_options: choosed_options.join(','), 
                              available_trainings: available_trainings.join(','))
-    passports = Passport.where('subscription > 0 and subscription < 300')
+    passports = Passport.where('subscription > 0 and subscription < 1000')
     passports.map do |pass|
       unless pass.user.nil? || pass.user.telegram_id.nil?
         bot.api.send_message(chat_id: pass.user.telegram_id, text: vote_message)
