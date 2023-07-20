@@ -28,7 +28,7 @@ module OpenPrerecording
     available_trainings = choosed_options.map { |c| c.include?("\xf0\x9f\x8f\xb9") ? 5 : 10 }
     Prerecording.last.update(choosed_options: choosed_options.join(','), 
                              available_trainings: available_trainings.join(','))
-    passports = Passport.where('subscription > 0 and subscription < 1000')
+    passports = Passport.where('subscription > 0 and subscription < 300')
     passports.map do |pass|
       unless pass.user.nil? || pass.user.telegram_id.nil?
         begin
@@ -55,10 +55,13 @@ module OpenPrerecording
           if available_trainings[option.to_i] == 0
             UserPrerecording.where(voted: false).each do |up|
               if up.passport
-                bot.api.send_message(chat_id: up.passport.user.telegram_id,
-                                    text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
-                                          " снова открыта, скорее забирайте !!!") if up.passport.user
-
+                begin
+                  bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                                      text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                            " снова открыта, скорее забирайте !!!") if up.passport.user
+                rescue
+                  p "Пользователь #{pass.user.username} заблокировал бота"
+                end
               end
             end
           end
@@ -74,9 +77,13 @@ module OpenPrerecording
       if available_trainings[option.to_i].zero?
         prerec.update(closed_prerecordings: (closed_trainings << option.to_i).join(','))
         UserPrerecording.where(voted: false).each do |up|
-          bot.api.send_message(chat_id: up.passport.user.telegram_id,
-                               text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
-                                     " закрыта, в случае голосавания голос не будет учтен !!!") if up.passport.user
+          begin
+            bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                                text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                      " закрыта, в случае голосавания голос не будет учтен !!!") if up.passport.user
+          rescue
+            p "Пользователь #{pass.user.username} заблокировал бота"
+          end
         end
       end
       prerec.update(available_trainings: available_trainings.join(','))
