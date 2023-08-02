@@ -69,8 +69,8 @@ module OpenPrerecording
           prerec.update(available_trainings: available_trainings.join(','))
         end
       end
+      user_prerec.update(days: message.option_ids.excluding(closed_trainings.map(&:to_i)).join(','), voted: true)
     end
-    user_prerec.update(days: message.option_ids.excluding(closed_trainings.map(&:to_i)).join(','), voted: true)
     message.option_ids.excluding(closed_trainings.map(&:to_i)).each do |option|
       available_trainings = prerec.available_trainings.split(',').map(&:to_i)
       available_trainings[option.to_i] -= 1
