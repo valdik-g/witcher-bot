@@ -55,12 +55,14 @@ module OpenPrerecording
           if available_trainings[option.to_i] == 0
             UserPrerecording.where(voted: false).each do |up|
               if up.passport
-                begin
-                  bot.api.send_message(chat_id: up.passport.user.telegram_id,
-                                      text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
-                                            " снова открыта, скорее забирайте !!!") if up.passport.user
-                rescue
-                  p "Пользователь #{pass.user.username} заблокировал бота"
+                if up.passport.user
+                  begin
+                    bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                                        text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                              " снова открыта, скорее забирайте !!!")
+                  rescue
+                    p "Пользователь #{pass.user.username} заблокировал бота"
+                  end
                 end
               end
             end
@@ -78,12 +80,14 @@ module OpenPrerecording
         prerec.update(closed_prerecordings: (closed_trainings << option.to_i).join(','))
         UserPrerecording.where(voted: false).each do |up|
           if up.passport
-            begin
-              bot.api.send_message(chat_id: up.passport.user.telegram_id,
-                                  text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
-                                        " закрыта, в случае голосавания голос не будет учтен !!!") if up.passport.user
-            rescue
-              p "Пользователь #{pass.user.username} заблокировал бота"
+            if up.passport.user
+              begin
+                bot.api.send_message(chat_id: up.passport.user.telegram_id,
+                                    text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                          " закрыта, в случае голосавания голос не будет учтен !!!")
+              rescue
+                p "Пользователь #{pass.user.username} заблокировал бота"
+              end
             end
           end
         end
