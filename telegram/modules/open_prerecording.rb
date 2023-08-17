@@ -50,6 +50,7 @@ module OpenPrerecording
     closed_trainings = prerec.closed_prerecordings.split(',')
     if user_prerec
       if user_prerec.voted
+        # TODO ???
         user_prerec.days.split(',').each do |option|
           available_trainings = prerec.available_trainings.split(',').map(&:to_i)
           if available_trainings[option.to_i] == 0
@@ -61,7 +62,7 @@ module OpenPrerecording
                                         text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
                                               " снова открыта, скорее забирайте !!!")
                   rescue
-                    p "Пользователь #{pass.user.username} заблокировал бота"
+                    p "Пользователь #{up.passport.user.username} заблокировал бота"
                   end
                 end
               end
@@ -86,7 +87,7 @@ module OpenPrerecording
                                     text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
                                           " закрыта, в случае голосавания голос не будет учтен !!!")
               rescue
-                p "Пользователь #{pass.user.username} заблокировал бота"
+                p "Пользователь #{up.passport.user.username} заблокировал бота"
               end
             end
           end

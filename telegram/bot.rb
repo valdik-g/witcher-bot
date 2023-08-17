@@ -6,7 +6,7 @@ require 'json'
 
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording CompleteKvest CreateKvest 
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
-            SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory]
+            SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
                       GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
 
@@ -85,8 +85,7 @@ Telegram::Bot::Client.run(token) do |bot|
             when '/prerecording'
               bot.api.send_message(chat_id: message.chat.id, text: Prerecording.last.close_message)
             when '/shop'
-              bot.api.send_message(chat_id: message.chat.id, text:'Работаем над этим')
-              # output_shop(message, bot, user)
+              output_shop(message, bot, user)
             when 'Создать паспорт'
               create_passport(message, bot, user)
             when 'Изменить запись'
@@ -129,6 +128,8 @@ Telegram::Bot::Client.run(token) do |bot|
               change_description(message, bot, user)
             when 'Добавить предмет'
               choose_players_inventory(message, bot, user)
+            when 'Управление магазином'
+              choose_update(message, bot, user)
             end
           # Passport creation
           when 'input_name'
@@ -241,6 +242,22 @@ Telegram::Bot::Client.run(token) do |bot|
             @players = choose_item_to_add(message, bot, user)
           when 'add_item_to_inventory'
             add_item_to_inventory(message, bot, user, @players)
+          when 'input_item_id'
+            input_item_id(message, bot, user)
+          when 'update_shop'
+            update_shop(message, bot, user)
+          when 'output_info_about_new_item'
+            output_info_about_new_item(message, bot, user)
+          when 'add_item_to_shop'
+            add_item_to_shop(message, bot, user)
+          when 'choose_item_to_remove'
+            choose_item_to_remove(message, bot, user)
+          when 'remove_item_from_shop'
+            remove_item_from_shop(message, bot, user)
+          when 'output_item_to_change_count'
+            output_item_to_change_count(message, bot, user)
+          when 'change_quantity'
+            change_quantity(message, bot, user)
           end
         end
         # else

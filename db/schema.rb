@@ -10,7 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_05_03_071903) do
+ActiveRecord::Schema[7.0].define(version: 2023_08_07_152057) do
+  create_table "buffs", force: :cascade do |t|
+    t.string "buff_name", default: ""
+    t.string "buff_description", default: ""
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "buffs_passports", force: :cascade do |t|
+    t.integer "buff_id"
+    t.integer "passport_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "kvests", force: :cascade do |t|
     t.string "kvest_name"
     t.integer "crons_reward"
@@ -69,6 +83,14 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_03_071903) do
     t.string "choosed_options", default: ""
     t.string "closed_prerecordings", default: ""
     t.string "available_trainings", default: ""
+  end
+
+  create_table "products", force: :cascade do |t|
+    t.string "item"
+    t.integer "cost"
+    t.integer "quantity"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "titles", force: :cascade do |t|
