@@ -21,8 +21,20 @@ module SubstractCrons
 
   def input_crons_to_substract(message, bot, user, passport_id)
     crons = message.text
-    passport = Passport.find(passport_id)
-    passport.update(crons: passport.crons - crons.to_i)
-    return_buttons(user, bot, message.chat.id, 'Кроны списаны')
+    passport = Passport.find_by(id: passport_id)
+    if passport
+      passport.update(crons: passport.crons - crons.to_i)
+      begin
+        if passport.user
+          bot.api.send_message(chat_id: passport.user.telegram_id, 
+                               text: crons.to_i > 0 ? "Цех списал с вас #{crons.to_i} крон" : "Цех начислил вам #{crons.to_i.abs} крон")
+        end
+      rescue => exception
+        print("Пользователь #{passport.nickname} заблокировал бота")
+      end
+      return_buttons(user, bot, message.chat.id, 'Кроны списаны')
+    else
+      return_buttons(user, bot, message.chat.id, 'Нет такого паспорта')
+    end
   end
 end
