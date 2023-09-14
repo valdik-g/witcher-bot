@@ -10,7 +10,7 @@ module BotHelper
   end
 
   def output_all_passports(bot, chat_id)
-    schools = ['Школа Волка', 'Школа Мантикоры', 'Школа Кота', 'Школа Змеи', 'Школа Медведя', 'Школа Грифона']
+    schools = ['Школа Волка', 'Школа Мантикоры', 'Школа Кота', 'Школа Змеи', 'Школа Медведя', 'Школа Грифона', 'Школа Лисы']
     passports_message = ''
     schools.each do |school|
       passports_message += school + ":\n\n"
