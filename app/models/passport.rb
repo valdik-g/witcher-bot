@@ -2,8 +2,15 @@ class Passport < ApplicationRecord
   has_and_belongs_to_many :kvests
   has_and_belongs_to_many :buffs
   has_and_belongs_to_many :titles
+  has_many :passports_inventories
+  has_many :inventories, through: :passports_inventories
   has_one :user
   has_one :user_prerecording, inverse_of: 'passport'
+  after_create do |passport|
+    UserPrecording.create(passport_id: passport.id)
+  end
+
+  scope :with_inventory, -> { inventories.select('passports.*, passports_inventories.quantity') }
 
   def transfer_crons(crons, passport_id, chat_id, bot, user)
     to_transfer = Passport.find_by(id: passport_id)
@@ -20,5 +27,16 @@ class Passport < ApplicationRecord
     else
       return_buttons(user, bot, chat_id, 'Неверный ввод, повторите команду снова')
     end
+  end
+
+  def inventor
+    self.inventories.select('inventories.item_name, passports_inventories.quantity').map do |item|
+      "#{item.item_name} #{item.quantity} шт.\n"
+    end.join
+  end
+
+  def add_item_to_inventory(item, quantity)
+    Passport.
+    Inventory.find_by(item_name: item)
   end
 end

@@ -83,9 +83,9 @@ module CreateTournament
       t.update(winners: "#{t.winners} #{message.text}")
     end
     if !t.winners.include?(' ') && t.pairs.empty?
-      new_inventory = if p.inventory.blank? && t.additional_reward.blank?
+      new_inventory = if p.inventory.blank? && t.additional_reward.downcase == 'нет'
         ''
-      elsif p.inventory.blank? && !t.additional_reward.blank?
+      elsif p.inventory.blank? && t.additional_reward != 'нет'
         t.additional_reward + "\n"
       else
         p.inventory + t.additional_reward + "\n"
