@@ -7,7 +7,7 @@ class Passport < ApplicationRecord
   has_one :user
   has_one :user_prerecording, inverse_of: 'passport'
   after_create do |passport|
-    UserPrecording.create(passport_id: passport.id)
+    UserPrerecording.create(passport_id: passport.id)
   end
 
   scope :with_inventory, -> { inventories.select('passports.*, passports_inventories.quantity') }
