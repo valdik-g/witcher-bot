@@ -31,7 +31,7 @@ class Passport < ApplicationRecord
 
   def inventor
     self.inventories.select('inventories.item_name, passports_inventories.quantity').map do |item|
-      "#{item.item_name} #{item.quantity} шт.\n"
+      item.quantity == 1 ? "#{item.item_name}\n" : " #{item.item_name} #{item.quantity} шт.\n"
     end.join
   end
 

@@ -240,16 +240,18 @@ Telegram::Bot::Client.run(token) do |bot|
             user.passport.transfer_crons(message.text.to_i, @passport_id, message.chat.id, bot, user)
           when 'choose_item_to_add'
             @players = choose_item_to_add(message, bot, user)
+          when 'choose_item_quantity'
+            @item_name = choose_item_quantity(message, bot, user)
           when 'add_item_to_inventory'
-            add_item_to_inventory(message, bot, user, @players)
+            add_item_to_inventory(message, bot, user, @players, @item_name)
           when 'input_item_id'
             input_item_id(message, bot, user)
           when 'update_shop'
             update_shop(message, bot, user)
-          when 'output_info_about_new_item'
-            output_info_about_new_item(message, bot, user)
+          when 'choose_cost_type'
+            @cost_type = choose_cost_type(message, bot, user)
           when 'add_item_to_shop'
-            add_item_to_shop(message, bot, user)
+            add_item_to_shop(message, bot, user, @cost_type)
           when 'choose_item_to_remove'
             choose_item_to_remove(message, bot, user)
           when 'remove_item_from_shop'

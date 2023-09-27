@@ -5,10 +5,11 @@ module GetInventory
   def get_inventory(message, bot)
     user = find_or_build_user(message.from)
     passport = user.passport
+    items, elixirs = get_items_and_elixirs(passport)
     bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
-                              text: "\xF0\x9F\x8E\x92 СУМКА:\n#{passport.inventory}" \
+                              text: "\xF0\x9F\x8E\x92 СУМКА:\n#{items}\n" \
                                     "#{special_items_message(passport.additional_kvest, passport.kvest_repeat)}" \
-                                    "#{elixirs_message(passport)}#{familiars_message(passport)}",
+                                    "#{elixirs_message(elixirs)}#{familiars_message(passport)}",
                               reply_markup: passport_markup)
   end
 
@@ -51,11 +52,19 @@ module GetInventory
     repeat_kvest.zero? ? '' : "Свиток повторного квеста #{repeat_kvest} штук(и)\n"
   end
 
-  def elixirs_message(passport)
-    passport.elixirs.blank? ? '' : "\xF0\x9F\xA7\xAA Эликсиры:\n#{passport.elixirs.split(',').join("\n")}"
+  def elixirs_message(elixirs)
+    elixirs.blank? ? '' : "\xF0\x9F\xA7\xAA Эликсиры:\n#{elixirs}\n"
   end
 
   def familiars_message(passport)
-    passport.school == 'Школа Змеи' ? "\n\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}\n" : ''
+    passport.school == 'Школа Змеи' ? "\n\xF0\x9F\x91\xBB Фамильяр:\n#{passport.familiar}\n" : ''
+  end
+
+  def get_items_and_elixirs(passport)
+    items, elixirs = [[], []]
+    passport.inventor.split("\n").each do |item|
+      item.include?("Эликсир") ? elixirs.push(item) : items.push(item)
+    end
+    [items.join("\n"), elixirs.join("\n")]
   end
 end

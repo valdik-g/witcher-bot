@@ -14,7 +14,7 @@ module Shop
   def update_shop(message, bot, user)
     case message.text
     when 'Добавить предмет'
-      output_info_about_new_item(message, bot, user)
+      output_cost_types(message, bot, user)
     when 'Удалить предмет'
       choose_item_to_remove(message, bot, user)
     when 'Изменить количество'
@@ -25,15 +25,32 @@ module Shop
     end
   end
 
-  def output_info_about_new_item(message, bot, user)
+  def output_cost_types(message, bot, user)
+    bot.api.send_message(chat_id: message.chat.id, text: 'Выберите тип стоимости', reply_markup: cost_markup)
+    user.update(step: 'choose_cost_type')
+  end
+
+  def choose_cost_type(message, bot, user)
+    case message.text
+    when 'Кроны'
+      @cost_type = 'crons'
+    when 'Рубли'
+      @cost_type = 'rubles'
+    when 'Предмет в инвентаре'
+      bot.api.send_message(chat_id: message.chat.id, text: 'В стоимости необходимо указать номер предмета в инвентаре' \
+                                                           'и через пробел его количество. Пример: 12 3; 14 2')
+      bot.api.send_message(chat_id: message.chat.id, text: Inventory.all.map { |i| "#{i.id}: #{i.item_name}\n" }.join)
+      @cost_type = 'inventory'
+    end
     bot.api.send_message(chat_id: message.chat.id, text: 'Введите название предмета, стоимость, ' \
                                                          'и количество через запятую', reply_markup: cancel_markup)
     user.update(step: 'add_item_to_shop')
+    @cost_type
   end
 
-  def add_item_to_shop(message, bot, user)
+  def add_item_to_shop(message, bot, user, cost_type)
     item, cost, quantity = message.text.split(',')
-    Product.create(item: item, cost: cost, quantity: quantity)
+    @product = Product.create(item: item, cost: cost, quantity: quantity, cost_type: cost_type)
     return_buttons(user, bot, message.chat.id, 'Предмет добавлен')
   end
 
@@ -43,10 +60,10 @@ module Shop
     bot.api.send_message(chat_id: message.chat.id, text: 'Выберите предмет для удаления', reply_markup: cancel_markup)
     user.update(step: 'remove_item_from_shop')
   end
-  
+
   def remove_item_from_shop(message, bot, user)
     product = Product.find_by(id: message.text)
-    if product 
+    if product
       product.delete
       return_buttons(user, bot, message.chat.id, 'Такого предмета нет. Повторите команду')
     else
@@ -58,8 +75,8 @@ module Shop
     shop_message = Product.all.map { |p| "#{p.id}: #{p.item}\n" }.join
     bot.api.send_message(chat_id: message.chat.id, text: shop_message)
     bot.api.send_message(chat_id: message.chat.id, text: 'Выберите предмет для изменения количества, ' \
-                                                         'а через запятую его новое количество', 
-                                                   reply_markup: cancel_markup)
+                                                         'а через запятую его новое количество',
+                         reply_markup: cancel_markup)
     user.update(step: 'change_quantity')
   end
 
@@ -70,18 +87,32 @@ module Shop
       product.update(quantity: quantity)
       return_buttons(user, bot, message.chat.id, "Количество предмета #{product.item} изменено до #{product.quantity}")
     else
-      return_buttons(user, bot, message.chat.id, "Такого предмета нет. Повторите команду")
+      return_buttons(user, bot, message.chat.id, 'Такого предмета нет. Повторите команду')
     end
   end
 
   def output_shop(message, bot, user)
-    shop_message = Product.all.map { |p| "#{p.id}: #{p.item} - #{p.cost}\xF0\x9F\xAA\x99. " \
-                                         "Кол-во: #{p.quantity}.\n" }.join
+    crons_message = Product.where(cost_type: 'crons').map do |p|
+      "#{p.id}: #{p.item} - #{p.cost}\xF0\x9F\xAA\x99. " \
+                          "Кол-во: #{p.quantity}.\n"
+    end.join
+    rubles_message = Product.where(cost_type: 'rubles').map do |p|
+      "#{p.id}: #{p.item} - #{p.cost} рублей. " \
+                          "Кол-во: #{p.quantity}.\n"
+    end.join
+    inventory_message = Product.where(cost_type: 'inventory').map do |p|
+      total_cost = p.cost.split("; ").map do |ic|
+                     item_id, cost = ic.split(' ')
+                     "#{Inventory.find_by(id: item_id).item_name} - #{cost} штук(и)\n"
+                   end.join
+      "#{p.id}: #{p.item}\nСтоимость:\n#{total_cost}\n"
+    end.join
+    shop_message = shop_message(crons_message, rubles_message, inventory_message)
     if shop_message.empty?
       bot.api.send_message(chat_id: message.chat.id, text: 'Магазин пуст. Возвращайтесь позже')
     else
-      bot.api.send_message(chat_id: message.chat.id, text: "Магазин:\n" + shop_message, reply_markup: cancel_markup)
-      bot.api.send_message(chat_id: message.chat.id, text: "Выберите предмет, вводите цифрой")
+      bot.api.send_message(chat_id: message.chat.id, text: "Магазин:\n#{shop_message}", reply_markup: cancel_markup)
+      bot.api.send_message(chat_id: message.chat.id, text: 'Выберите предмет, вводите цифрой')
       user.update(step: 'input_item_id')
     end
   end
@@ -89,15 +120,34 @@ module Shop
   def input_item_id(message, bot, user)
     item = Product.find_by(id: message.text)
     current_buyer = user.passport
-    unless item.nil?
-      if item.cost.to_i < current_buyer.crons
-        buy_item(bot, item, current_buyer)
-        return_buttons(user, bot, message.chat.id, 'Предмет приобретен')
-      else
-        return_buttons(user, bot, message.chat.id, 'Предмет не приобретен, недостаточно крон')
-      end
-    else
+    if item.nil?
       return_buttons(user, bot, message.chat.id, 'Такого предмета нет, повторите ввод')
+    else
+      case item.cost_type
+      when 'crons'
+        if item.cost.to_i < current_buyer.crons
+          buy_item(bot, item, current_buyer)
+          return_buttons(user, bot, message.chat.id, 'Предмет приобретен')
+        else
+          return_buttons(user, bot, message.chat.id, 'Предмет не приобретен, недостаточно крон')
+        end
+      when 'rubles'
+        send_message_for_admin(bot, "#{current_buyer.nickname} желает приобрести #{item.item}")
+        return_buttons(user, bot, message.chat.id, 'Уведомление отправлено Анри Вилу')
+      when 'inventory'
+        if item.item.include?('Эликсир')
+          i = Inventory.find_by(item_name: item.item)
+          if PassportsInventory.find_by(inventory_id: i.id, passport_id: current_buyer.id)
+            return_buttons(user, bot, message.chat.id, 'Данный эликсир уже приобретен')
+          end
+        end
+        if can_purchase?(item.cost, current_buyer)
+          purchase_for_items(item, current_buyer)
+          return_buttons(user, bot, message.chat.id, 'Предмет приобретен')
+        else
+          return_buttons(user, bot, message.chat.id, 'Недостаточно предметов в инвентаре')
+        end
+      end
     end
   end
 
@@ -105,7 +155,7 @@ module Shop
 
   def shop_markup
     Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: shop_buttons.map do |button|
-      Telegram::Bot::Types::KeyboardButton.new(text:button)
+      Telegram::Bot::Types::KeyboardButton.new(text: button)
     end)
   end
 
@@ -113,8 +163,18 @@ module Shop
     ['Добавить предмет', 'Удалить предмет', 'Изменить количество', 'Очистить магазин']
   end
 
+  def cost_markup
+    Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: cost_buttons.map do |button|
+      Telegram::Bot::Types::KeyboardButton.new(text: button)
+    end)
+  end
+
+  def cost_buttons
+    ['Кроны', 'Рубли', 'Предмет в инвентаре']
+  end
+
   def send_message_for_admin(bot, text)
-    bot.api.send_message(chat_id: 612352098, text: text) # main admin telegram_id
+    bot.api.send_message(chat_id: 822281212, text: text) # main admin telegram_id 612_352_098
   end
 
   def buy_item(bot, product, current_buyer)
@@ -124,7 +184,9 @@ module Shop
     when 'Свиток дополнительного квеста'
       current_buyer.update(kvest_repeat: current_buyer.kvest_repeat + 1)
     else
-      current_buyer.update(inventory: current_buyer.inventory + "#{product.item}\n")
+      item = Inventory.find_or_create_by(item_name: product.item)
+      passport_inventory = PassportsInventory.find_or_create_by(passport_id: current_buyer.id, inventory_id: item.id)
+      passport_inventory.update(quantity: passport_inventory.quantity + 1)
       if product.quantity == 1
         product.delete
         send_message_for_admin(bot, "Предмет #{product} закончился")
@@ -134,5 +196,32 @@ module Shop
     end
     current_buyer.update(crons: current_buyer.crons - product.cost.to_i)
     send_message_for_admin(bot, "#{current_buyer.nickname} приобрел(а) #{product.item}")
+  end
+
+  def purchase_for_items(product, current_buyer)
+    product.cost.split("; ").each do |ic|
+      item_id, cost = ic.split(' ')
+      passport_inventory = PassportsInventory.find_by(passport_id: current_buyer.id, inventory_id: item_id)
+      passport_inventory.update(quantity: passport_inventory.quantity - cost.to_i)
+    end
+    item = Inventory.find_or_create_by(item_name: product.item)
+    PassportsInventory.create(passport_id: current_buyer.id, inventory_id: item.id, quantity: 1)
+  end
+
+  def can_purchase?(items, current_buyer)
+    items.split("; ").each do |ic|
+      item_id, cost = ic.split(' ')
+      passport_inventory = PassportsInventory.find_by(passport_id: current_buyer.id, inventory_id: item_id)
+      return false unless passport_inventory
+      return false if passport_inventory.quantity < cost.to_i
+    end
+    true
+  end
+
+  def shop_message(crons_message, rubles_message, inventory_message)
+    crons_message = "Предметы за кроны\xF0\x9F\xAA\x99:\n" +  crons_message + "\n" unless crons_message.to_s.empty?
+    rubles_message = "Предметы за чеканные:\n" + rubles_message + "\n" unless rubles_message.to_s.empty?
+    inventory_message = "Предметы для крафта:\n" + inventory_message unless inventory_message.to_s.empty?
+    crons_message.to_s + rubles_message.to_s + inventory_message.to_s
   end
 end
