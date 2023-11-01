@@ -8,7 +8,7 @@ module GetInventory
     items, elixirs = get_items_and_elixirs(passport)
     bot.api.edit_message_text(chat_id: user.telegram_id, message_id: message.message.message_id,
                               text: "\xF0\x9F\x8E\x92 СУМКА:\n#{items}\n" \
-                                    "#{special_items_message(passport.additional_kvest, passport.kvest_repeat)}" \
+                                    "#{special_items_message(passport.additional_kvest, passport.kvest_repeat, passport.kvest_call)}" \
                                     "#{elixirs_message(elixirs)}#{familiars_message(passport)}",
                               reply_markup: passport_markup)
   end
