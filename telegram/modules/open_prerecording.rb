@@ -62,7 +62,7 @@ module OpenPrerecording
                                         text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
                                               " снова открыта, скорее забирайте !!!")
                   rescue
-                    p "Пользователь #{up.passport.user.username} заблокировал бота"
+                    p "Пользовательзаблокировал бота"
                   end
                 end
               end
@@ -87,7 +87,7 @@ module OpenPrerecording
                                     text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
                                           " закрыта, в случае голосавания голос не будет учтен !!!")
               rescue
-                p "Пользователь #{up.passport.user.username} заблокировал бота"
+                p "Пользователь заблокировал бота"
               end
             end
           end

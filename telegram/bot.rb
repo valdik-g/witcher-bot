@@ -8,7 +8,7 @@ export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
             SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
-                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
+                     GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
 
 options =  ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
             "Сб3\xf0\x9f\x8f\xb9" "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"]
@@ -18,6 +18,7 @@ export.each { |m| include(Kernel.const_get(m)) }
 export_for_user.each { |m| include(Kernel.const_get(m)) }
 
 token = '5587814730:AAFci39iNXTgIeDLVTvKpCjULW2a94zbuP8'
+i = 0
 
 Telegram::Bot::Client.run(token) do |bot|
   Sidekiq::Cron::Job.create(
@@ -42,11 +43,17 @@ Telegram::Bot::Client.run(token) do |bot|
       case message.data
       when 'inventory' then get_inventory(message, bot)
       when 'passport'  then get_passport_back(message, bot)
+      when 'shop_prev'
+        i = i -1
+        i = output_shop_edit(message, bot, find_or_build_user(message.from), i)
+      when 'shop_next'
+        i = i + 1
+        i = output_shop_edit(message, bot, find_or_build_user(message.from), i)
       end
     when Telegram::Bot::Types::Message
       begin
         user = find_or_build_user(message.from)
-        # if [822_281_212, 6185223601].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
+        # if [822_281_212, 6185223601, 612_352_098].include?(user.telegram_id) # , 612_352_098, 499620114, 940051147
         unless message.text.nil? && !message.text.empty? # && message.document.nil?
           return_buttons(user, bot, message.chat.id, 'Действие отменено') if message.text == 'Отмена'
           case user.step
@@ -250,8 +257,12 @@ Telegram::Bot::Client.run(token) do |bot|
             update_shop(message, bot, user)
           when 'choose_cost_type'
             @cost_type = choose_cost_type(message, bot, user)
+          when 'choose_item_type'
+            @item, @cost, @quantity = choose_item_type(message, bot, user)
+          when 'additional_cost'
+            @item_type = additional_cost(message, bot, user)
           when 'add_item_to_shop'
-            add_item_to_shop(message, bot, user, @cost_type)
+            add_item_to_shop(message, bot, user, [@item, @cost, @quantity, @cost_type, @item_type])
           when 'choose_item_to_remove'
             choose_item_to_remove(message, bot, user)
           when 'remove_item_from_shop'

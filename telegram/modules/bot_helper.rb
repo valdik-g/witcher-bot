@@ -79,6 +79,12 @@ module BotHelper
      'Управление магазином', 'Открыть предзапись', 'Закрыть предзапись']
   end
 
+  def no_markup
+    Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [
+      Telegram::Bot::Types::KeyboardButton.new(text: 'Нет')
+    ], resize_keyboard: true)
+  end
+
   def hamon_markup
     Telegram::Bot::Types::ReplyKeyboardMarkup.new(keyboard: [
       Telegram::Bot::Types::KeyboardButton.new(text: 'Изменить описание')

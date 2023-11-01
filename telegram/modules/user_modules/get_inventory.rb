@@ -37,14 +37,20 @@ module GetInventory
 
   private
 
-  def special_items_message(additional_kvest, repeat_kvest)
+  def special_items_message(additional_kvest, repeat_kvest, kvest_call)
     add_kvest = additional_kvest_message(additional_kvest)
     rep_kvest = repeat_kvest_message(repeat_kvest)
-    add_kvest.blank? && rep_kvest.blank? ? '' : "\nСпециальные предметы: \n#{add_kvest}#{rep_kvest}\n"
+    kv_call = kvest_call_message(kvest_call)
+    add_kvest.blank? && rep_kvest.blank? && kv_call.blank? ? '' : "\nСпециальные предметы: \n" \
+                                                                  "#{add_kvest}#{rep_kvest}#{kv_call}\n"
   end
 
   def additional_kvest_message(additional_kvest)
     additional_kvest.zero? ? '' : "Свиток дополнительного квеста #{additional_kvest} штук(и)\n"
+  end
+
+  def kvest_call_message(kvest_call)
+    kvest_call.zero? ? '' : "Свиток вызова квеста #{kvest_call} штук(и)\n"
   end
 
   # \xF0\x9F\x8E\x9F\xEF\xB8\x8F Специальные предметы:\n
