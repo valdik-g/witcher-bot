@@ -234,6 +234,7 @@ module Shop
 
   def send_message_for_admin(bot, text)
     bot.api.send_message(chat_id: 822281212, text: text) # main admin telegram_id 612_352_098
+    bot.api.send_message(chat_id: 612_352_098, text: text)
   end
 
   def buy_item(bot, product, current_buyer)
