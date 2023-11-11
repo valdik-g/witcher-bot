@@ -133,13 +133,17 @@ module Shop
   # end
 
   def output_shop(message, bot, user, i=0)
-    grouped_products = Product.all.group_by(&:item_type)
-    shop_message = shop_message(grouped_products, i)
-    bot.api.send_message(chat_id: user.telegram_id, text: shop_message, 
-                         reply_markup: output_shop_markup)
-    bot.api.send_message(chat_id: message.chat.id, text: 'Выберите предмет, вводите цифрой', 
-                         reply_markup: cancel_markup)
-    user.update(step: 'input_item_id')
+    grouped_products = Product.all&.group_by(&:item_type)
+    if grouped_products
+      shop_message = shop_message(grouped_products, i)
+      bot.api.send_message(chat_id: user.telegram_id, text: shop_message, 
+                          reply_markup: output_shop_markup)
+      bot.api.send_message(chat_id: message.chat.id, text: 'Выберите предмет, вводите цифрой', 
+                          reply_markup: cancel_markup)
+      user.update(step: 'input_item_id')
+    else
+      return_buttons(user, bot, message.chat.id, 'Магазин пуст, возвращайтесь позже!')
+    end
   end
 
   def output_shop_edit(message, bot, user, i=0)
