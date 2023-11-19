@@ -6,7 +6,7 @@ require 'json'
 
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording CompleteKvest CreateKvest 
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
-            SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop]
+            SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop ChangeInventory]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
 
@@ -137,6 +137,8 @@ Telegram::Bot::Client.run(token) do |bot|
               choose_players_inventory(message, bot, user)
             when 'Управление магазином'
               choose_update(message, bot, user)
+            when 'Изменить инвентарь'
+              choose_inventory_passport(message, bot, user)
             end
           # Passport creation
           when 'input_name'
@@ -271,6 +273,12 @@ Telegram::Bot::Client.run(token) do |bot|
             output_item_to_change_count(message, bot, user)
           when 'change_quantity'
             change_quantity(message, bot, user)
+          when 'choose_inventory_record'
+            choose_inventory_record(message, bot, user)
+          when 'choose_inventory_field'
+            @passport_inventory = choose_inventory_field(message, bot, user)
+          when 'change_value_field'
+            change_value_field(message, bot, user, @passport_inventory)
           end
         end
         # else

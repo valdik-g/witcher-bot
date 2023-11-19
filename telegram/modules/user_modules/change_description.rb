@@ -19,7 +19,7 @@ module ChangeDescription
       user.update(step: 'input_new_description')
       change_passport_h
     else
-      return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
+      return_buttons(user, bot, message.chat.id)
     end
   end
 

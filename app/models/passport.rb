@@ -25,7 +25,7 @@ class Passport < ApplicationRecord
         return_buttons(user, bot, chat_id, 'Кроны переведены')
       end
     else
-      return_buttons(user, bot, chat_id, 'Неверный ввод, повторите команду снова')
+      return_buttons(user, bot, chat_id)
     end
   end
 

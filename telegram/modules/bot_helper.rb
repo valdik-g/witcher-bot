@@ -2,7 +2,7 @@
 
 # module with help functions for bot
 module BotHelper
-  def return_buttons(user, bot, chat_id, message_text)
+  def return_buttons(user, bot, chat_id, message_text = 'Неверный ввод, повторите команду снова')
     reply_markup = user.admin ? admin_markup : remove_markup
     reply_markup = hamon_markup if user.telegram_id == 448_768_896
     bot.api.send_message(chat_id: chat_id, text: message_text, reply_markup: reply_markup)
@@ -76,7 +76,7 @@ module BotHelper
     ['Создать паспорт', 'Создать квест', 'Создать титул', 'Выполнить квест', 'Повторить квест', 'Назначить титул', 
      'Изменить запись', 'Списать занятия', 'Начислить занятия', 'Добавить предмет', 'Информация по игроку', 
      'Информация по всем абонементам', 'Списать кроны', 'Повысить ранг', 'Уведомление', 'Провести турнир', 
-     'Управление магазином', 'Открыть предзапись', 'Закрыть предзапись']
+     'Управление магазином', 'Изменить инвентарь', 'Открыть предзапись', 'Закрыть предзапись']
   end
 
   def no_markup

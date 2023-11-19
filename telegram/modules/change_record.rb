@@ -23,7 +23,7 @@ module ChangeRecord
   def choose_record(message, bot, user, active_table)
     record = active_table.find(message.text)
     if record.nil?
-      return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
+      return_buttons(user, bot, message.chat.id)
     else
       bot.api.send_message(chat_id: message.chat.id,
                            text: "#{output_record(record)}\nВыберите поле для изменения")
@@ -37,7 +37,7 @@ module ChangeRecord
       bot.api.send_message(chat_id: message.chat.id, text: 'Введите новое значение для поля')
       user.update(step: 'update_field_value')
     else
-      return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
+      return_buttons(user, bot, message.chat.id)
     end
     message.text
   end
@@ -56,7 +56,7 @@ module ChangeRecord
     when 3 then choose_active_table(bot, message.chat.id, Kvest, 'kvest_name')
     when 4 then choose_active_table(bot, message.chat.id, Title, 'title_name')
     else
-      return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
+      return_buttons(user, bot, message.chat.id)
     end
   end
 

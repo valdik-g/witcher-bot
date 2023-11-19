@@ -28,7 +28,7 @@ module AssignTitle
       passport.titles << title unless passport.titles.include? title
       return_buttons(user, bot, message.chat.id, 'Титул назначен')
     else
-      return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
+      return_buttons(user, bot, message.chat.id)
     end
   end
 end

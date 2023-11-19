@@ -24,7 +24,7 @@ module AccrueVisitings
     value = message.text
     passport = Passport.find(passport_id)
     if passport.nil?
-      return_buttons(user, bot, message.chat.id, 'Неверный ввод, повторите команду снова')
+      return_buttons(user, bot, message.chat.id)
     else
       passport.update(subscription: passport.subscription + value.to_i)
       return_buttons(user, bot, message.chat.id, 'Занятия начислены')
