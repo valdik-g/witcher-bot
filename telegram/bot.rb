@@ -6,7 +6,8 @@ require 'json'
 
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording CompleteKvest CreateKvest 
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
-            SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop ChangeInventory]
+            SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop ChangeInventory
+            RemoveKvest]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
 
@@ -139,6 +140,8 @@ Telegram::Bot::Client.run(token) do |bot|
               choose_update(message, bot, user)
             when 'Изменить инвентарь'
               choose_inventory_passport(message, bot, user)
+            when 'Снять квест'
+              choose_passport_to_remove(message, bot, user)
             end
           # Passport creation
           when 'input_name'
@@ -279,6 +282,10 @@ Telegram::Bot::Client.run(token) do |bot|
             @passport_inventory = choose_inventory_field(message, bot, user)
           when 'change_value_field'
             change_value_field(message, bot, user, @passport_inventory)
+          when 'choose_kvest_to_delete'
+            @passport_id = choose_kvest_to_delete(message, bot, user)
+          when 'remove_passport_kvest'
+            remove_passport_kvest(message, bot, user, @passport_id)
           end
         end
         # else

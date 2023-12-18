@@ -14,7 +14,7 @@ module RankUp
   end
 
   def input_passport_rank(message, bot, user)
-    ranks = ['Рекрут', 'Ученик', 'Кандидат', 'Младший ведьмак', 'Ведьмак']
+    ranks = ['Рекрут', 'Ученик', 'Бронзовый Кандидат', 'Серебряный Кандидат',' Золотой Кандидат', 'Младший ведьмак', 'Ведьмак']
     passport = Passport.find(message.text)
     next_rank = ranks.index(passport.rank) + 1
     passport.update(rank: ranks[next_rank])
