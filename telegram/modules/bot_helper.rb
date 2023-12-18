@@ -25,6 +25,12 @@ module BotHelper
     bot.api.send_message(chat_id: chat_id, text: passports_message)
   end
 
+  def output_all_passport_kvests(bot, chat_id, passport_id)
+    passport = Passport.find_by(id: passport_id)
+    kvests_message = passport.kvests.map { |p| "#{p.id}: #{p.kvest_name}\n" }.join
+    bot.api.send_message(chat_id: chat_id, text: kvests_message)
+  end
+
   def find_or_build_user(user_obj)
     user = User.find_by(telegram_id: user_obj.id)
     username = ''
@@ -73,7 +79,8 @@ module BotHelper
   end
 
   def admin_buttons
-    ['Создать паспорт', 'Создать квест', 'Создать титул', 'Выполнить квест', 'Повторить квест', 'Назначить титул', 
+    ['Создать паспорт', 'Создать квест', 'Создать титул', 'Выполнить квест', 'Повторить квест', 'Снять квест',
+     'Назначить титул', 
      'Изменить запись', 'Списать занятия', 'Начислить занятия', 'Добавить предмет', 'Информация по игроку', 
      'Информация по всем абонементам', 'Списать кроны', 'Повысить ранг', 'Уведомление', 'Провести турнир', 
      'Управление магазином', 'Изменить инвентарь', 'Открыть предзапись', 'Закрыть предзапись']
