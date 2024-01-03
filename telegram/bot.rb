@@ -7,7 +7,7 @@ require 'json'
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording CompleteKvest CreateKvest 
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
             SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop ChangeInventory
-            RemoveKvest]
+            RemoveKvest CreateBattlePassKvest LevelUpBP]
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
 
@@ -142,6 +142,10 @@ Telegram::Bot::Client.run(token) do |bot|
               choose_inventory_passport(message, bot, user)
             when 'Снять квест'
               choose_passport_to_remove(message, bot, user)
+            when 'Создать уровень БП'
+              create_bp_kvest(message, bot, user)
+            when 'Повысить уровень БП'
+              choose_level_up_bp_passports(message, bot, user)
             end
           # Passport creation
           when 'input_name'
@@ -286,6 +290,22 @@ Telegram::Bot::Client.run(token) do |bot|
             @passport_id = choose_kvest_to_delete(message, bot, user)
           when 'remove_passport_kvest'
             remove_passport_kvest(message, bot, user, @passport_id)
+          when 'input_bp_crons_reward'
+            @bp_crons = input_bp_crons_reward(message, bot, user)
+          when 'input_bp_title_reward'
+            @bp_title_name = input_bp_title_reward(message, bot, user)
+          when 'input_bp_kvestrepeat_reward'
+            @bp_kvest_repeat = input_bp_kvestrepeat_reward(message, bot, user)
+          when 'input_bp_addkvest_reward'
+            @bp_addkvest = input_bp_addkvest_reward(message, bot, user)
+          when 'input_bp_kvestcall_reward'
+            input_bp_kvestcall_reward(message, bot, user, {:crons=> @bp_crons, 
+                                                           :title => @bp_title_name,
+                                                           :add => @bp_addkvest,
+                                                           :repeat => @bp_kvest_repeat, 
+                                                           :call => message.text})
+          when 'level_up_passport'
+            level_up_passport(message, bot, user)
           end
         end
         # else

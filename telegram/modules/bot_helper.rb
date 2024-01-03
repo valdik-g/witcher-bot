@@ -47,7 +47,7 @@ module BotHelper
 
   def output_passport(passport_id, user)
     passport = Passport.find(passport_id)
-    "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl\nРАНГ - #{passport.rank}\n
+    "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl\nРАНГ - #{passport.rank}\nУровень боевого пропуска - #{passport.bp_level} lvl\n
 \xF0\x9F\x8F\xB0 Школа: #{passport.school}\n\n#{passports_title(passport)}
 #{long_kvest(passport)}#{completed_kvests(user, passport)}\xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}#{get_buffs(passport_id)}
 \xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99"
@@ -83,7 +83,8 @@ module BotHelper
      'Назначить титул', 
      'Изменить запись', 'Списать занятия', 'Начислить занятия', 'Добавить предмет', 'Информация по игроку', 
      'Информация по всем абонементам', 'Списать кроны', 'Повысить ранг', 'Уведомление', 'Провести турнир', 
-     'Управление магазином', 'Изменить инвентарь', 'Открыть предзапись', 'Закрыть предзапись']
+     'Управление магазином', 'Изменить инвентарь', 'Создать уровень БП', 'Повысить уровень БП', 
+     'Открыть предзапись', 'Закрыть предзапись']
   end
 
   def no_markup

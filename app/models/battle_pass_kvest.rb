@@ -1,0 +1,2 @@
+class BattlePassKvest < ApplicationRecord
+end
