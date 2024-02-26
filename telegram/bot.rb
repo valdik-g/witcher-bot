@@ -94,7 +94,7 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: Prerecording.last.close_message)
             when '/shop'
               output_shop(message, bot, user)
-            when 'player_history'
+            when '/get_passports_history'
               choose_passport_to_show_history(message, bot, user)
             when 'Создать паспорт'
               create_passport(message, bot, user)
