@@ -10,9 +10,9 @@ module GetUserHistory
   
     def input_player_passport_number_for_history(message, bot, user)
       number = message.text
-      passport = Passport.find_by(number)
+      passport = Passport.find_by(id: number)
       history_message = if passport
-        passports_history(passport, user)
+        passports_history(passport)
       else
         'Такого паспорта нет, повторите команду'
       end
@@ -23,7 +23,7 @@ module GetUserHistory
 
     def output_passport_with_history(bot, chat_id)
       passports_with_history = Passport.where("history <> ''").map { |p| "#{p.id}: #{p.nickname}\n" }.join
-      bot.api.send_message(chat_id: chat_id, text: passports_message)
+      bot.api.send_message(chat_id: chat_id, text: passports_with_history)
     end
 
     def passports_history(passport)
