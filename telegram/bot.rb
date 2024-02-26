@@ -7,9 +7,9 @@ require 'json'
 export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording CompleteKvest CreateKvest 
             CreatePassports CreateTitle CreateTournament Notification OpenPrerecording PlayerInfo RankUp 
             SubscriptionInfo SubstractCrons SubstractVisitings AddItemToInventory Shop ChangeInventory
-            RemoveKvest CreateBattlePassKvest LevelUpBP]
-export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetKvests 
-                     GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory]
+            RemoveKvest CreateBattlePassKvest LevelUpBP GetAllPlayersBP]
+export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetUserHistory
+                     GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory GetKvests]
 
 options =  ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
             "Сб3\xf0\x9f\x8f\xb9" "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"]
@@ -94,6 +94,8 @@ Telegram::Bot::Client.run(token) do |bot|
               bot.api.send_message(chat_id: message.chat.id, text: Prerecording.last.close_message)
             when '/shop'
               output_shop(message, bot, user)
+            when 'player_history'
+              choose_passport_to_show_history(message, bot, user)
             when 'Создать паспорт'
               create_passport(message, bot, user)
             when 'Изменить запись'
@@ -146,6 +148,8 @@ Telegram::Bot::Client.run(token) do |bot|
               create_bp_kvest(message, bot, user)
             when 'Повысить уровень БП'
               choose_level_up_bp_passports(message, bot, user)
+            when 'Отобразить уровни БП'
+              def get_all_players_bp(message, bot, user)
             end
           # Passport creation
           when 'input_name'
@@ -306,6 +310,8 @@ Telegram::Bot::Client.run(token) do |bot|
                                                            :call => message.text})
           when 'level_up_passport'
             level_up_passport(message, bot, user)
+          when 'input_player_passport_number_for_history'
+            input_player_passport_number_for_history(message, bot, user)
           end
         end
         # else
