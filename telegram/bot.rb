@@ -149,7 +149,7 @@ Telegram::Bot::Client.run(token) do |bot|
             when 'Повысить уровень БП'
               choose_level_up_bp_passports(message, bot, user)
             when 'Отобразить уровни БП'
-              def get_all_players_bp(message, bot, user)
+              get_all_players_bp(message, bot, user)
             end
           # Passport creation
           when 'input_name'
