@@ -25,8 +25,11 @@ module ChangeRecord
     if record.nil?
       return_buttons(user, bot, message.chat.id)
     else
+      output_record(record).each do |mes|
+        bot.api.send_message(chat_id: message.chat.id, text: mes)
+      end
       bot.api.send_message(chat_id: message.chat.id,
-                           text: "#{output_record(record)}\nВыберите поле для изменения")
+                           text: "Выберите поле для изменения")
       user.update(step: 'choose_field')
     end
     record
@@ -66,6 +69,13 @@ module ChangeRecord
   end
   
   def output_record(record)
-    record.attributes.except('created_at', 'updated_at', 'id').map { |k, v| "#{k}: #{v}\n" }.join
+    change_message = record.attributes.except('created_at', 'updated_at', 'id').map { |k, v| "#{k}: #{v}\n" }.join
+
+    if change_message.length >= 4096
+      part1, part2 = str.slice!(0..2050), str
+      return [part1, part2]
+    end
+
+    [change_message]
   end
 end
