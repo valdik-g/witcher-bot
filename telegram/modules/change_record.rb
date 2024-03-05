@@ -72,7 +72,7 @@ module ChangeRecord
     change_message = record.attributes.except('created_at', 'updated_at', 'id').map { |k, v| "#{k}: #{v}\n" }.join
 
     if change_message.length >= 4096
-      part1, part2 = str.slice!(0..2050), str
+      part1, part2 = change_message.slice!(0..2050), change_message
       return [part1, part2]
     end
 
