@@ -41,21 +41,21 @@ module GetInventory
     add_kvest = additional_kvest_message(additional_kvest)
     rep_kvest = repeat_kvest_message(repeat_kvest)
     kv_call = kvest_call_message(kvest_call)
-    add_kvest.blank? && rep_kvest.blank? && kv_call.blank? ? '' : "\nСпециальные предметы: \n" \
+    add_kvest.blank? && rep_kvest.blank? && kv_call.blank? ? '' : "\nⲤⲡⲉцυⲁⲗьⲏыⲉ ⲡⲣⲉⲇⲙⲉⲧы: \n" \
                                                                   "#{add_kvest}#{rep_kvest}#{kv_call}\n"
   end
 
   def additional_kvest_message(additional_kvest)
-    additional_kvest.zero? ? '' : "Свиток дополнительного квеста #{additional_kvest} штук(и)\n"
+    additional_kvest.zero? ? '' : "Ⲥⲃυⲧⲟⲕ ⲇⲟⲡⲟⲗⲏυⲧⲉⲗьⲏⲟⲅⲟ ⲕⲃⲉⲥⲧⲁ #{additional_kvest} ⲱⲧⲩⲕ(υ)\n"
   end
 
   def kvest_call_message(kvest_call)
-    kvest_call.zero? ? '' : "Свиток вызова квеста #{kvest_call} штук(и)\n"
+    kvest_call.zero? ? '' : "Ⲥⲃυⲧⲟⲕ ⲃыⳅⲟⲃⲁ ⲕⲃⲉⲥⲧⲁ #{kvest_call} ⲱⲧⲩⲕ(υ)\n"
   end
 
   # \xF0\x9F\x8E\x9F\xEF\xB8\x8F Специальные предметы:\n
   def repeat_kvest_message(repeat_kvest)
-    repeat_kvest.zero? ? '' : "Свиток повторного квеста #{repeat_kvest} штук(и)\n"
+    repeat_kvest.zero? ? '' : "Ⲥⲃυⲧⲟⲕ ⲡⲟⲃⲧⲟⲣⲏⲟⲅⲟ ⲕⲃⲉⲥⲧⲁ #{repeat_kvest} ⲱⲧⲩⲕ(υ)\n"
   end
 
   def elixirs_message(elixirs)

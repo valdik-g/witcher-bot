@@ -10,7 +10,7 @@ module BotHelper
   end
 
   def output_all_passports(bot, chat_id)
-    schools = ['Школа Волка', 'Школа Мантикоры', 'Школа Кота', 'Школа Змеи', 'Школа Медведя', 'Школа Грифона', 'Школа Лиса']
+    schools = ['Ⲱⲕⲟⲗⲁ Ⲃⲟⲗⲕⲁ', 'Ⲱⲕⲟⲗⲁ Ⲙⲁⲏⲧυⲕⲟⲣы', 'Ⲱⲕⲟⲗⲁ Ⲕⲟⲧⲁ', 'Ⲱⲕⲟⲗⲁ Ⳅⲙⲉυ', 'Ⲱⲕⲟⲗⲁ Ⲙⲉⲇⲃⲉⲇя', 'Ⲱⲕⲟⲗⲁ Ⲅⲣυⲫⲟⲏⲁ', 'Ⲱⲕⲟⲗⲁ Ⲗυⲥⲁ']
     passports_message = ''
     schools.each do |school|
       passports_message += school + ":\n\n"
@@ -42,15 +42,15 @@ module BotHelper
 
   def get_buffs(passport_id)
     buffs = Passport.find(passport_id).buffs.map { |b| "#{b.buff_name}:\n#{b.buff_description}\n" }.join("\n")
-    buffs.empty? ? "\n" : "\n\n\xE2\x86\x95Баффы/Дебаффы:\n" + buffs
+    buffs.empty? ? "\n" : "\n\n\xE2\x86\x95Ⳝⲁⲫⲫы/Ⲇⲉⳝⲁⲫⲫы:\n" + buffs
   end
 
   def output_passport(passport_id, user)
     passport = Passport.find(passport_id)
-    "\xF0\x9F\x97\xA1 ПЕРСОНАЖ:\n\n#{passport.nickname} #{passport.level} lvl\nРАНГ - #{passport.rank}\nУровень боевого пропуска - #{passport.bp_level} lvl\n
-\xF0\x9F\x8F\xB0 Школа: #{passport.school}\n\n#{passports_title(passport)}
-#{long_kvest(passport)}#{completed_kvests(user, passport)}\xF0\x9F\x93\x9C ОПИСАНИЕ:\n#{passport.description}#{get_buffs(passport_id)}
-\xF0\x9F\x8E\x92 СУМКА:\nКроны - #{passport.crons}\xF0\x9F\xAA\x99"
+    "\xF0\x9F\x97\xA1 ⲠⲈⲢⲤⲞⲎⲀⲮ:\n\n#{passport.nickname} #{passport.level} ⳑⳳⳑ\nⲢⲀⲎⲄ - #{passport.rank}\nⲨⲣⲟⲃⲉⲏь ⳝⲟⲉⲃⲟⲅⲟ ⲡⲣⲟⲡⲩⲥⲕⲁ - #{passport.bp_level} ⳑⳳⳑ\n
+\xF0\x9F\x8F\xB0 Ⲱⲕⲟⲗⲁ: #{passport.school}\n\n#{passports_title(passport)}
+#{long_kvest(passport)}#{completed_kvests(user, passport)}\xF0\x9F\x93\x9C ⲞⲠⳘⲤⲀⲎⳘⲈ:\n#{passport.description}#{get_buffs(passport_id)}
+\xF0\x9F\x8E\x92 ⲤⲨⲘⲔⲀ:\nⲔⲣⲟⲏы - #{passport.crons}\xF0\x9F\xAA\x99"
   end
 
   def passports_title(passport)
@@ -60,7 +60,7 @@ module BotHelper
 
   def long_kvest(passport)
     long_kvest = passport.long_kvest_id.nil? ? 'Нет' : Kvest.find_by(id: passport.long_kvest_id).kvest_name
-    "\xE2\x9D\x93 Проходит квест:\n#{long_kvest}\n\n"
+    "\xE2\x9D\x93 Ⲡⲣⲟⲭⲟⲇυⲧ ⲕⲃⲉⲥⲧ:\n#{long_kvest}\n\n"
   end
 
   def completed_kvests(user, passport)
