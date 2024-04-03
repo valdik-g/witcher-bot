@@ -16,14 +16,14 @@ module OpenPrerecording
 
   def input_vote_message(message, bot, user)
     bot.api.send_poll(chat_id: message.chat.id, question: 'Какие тренировки планируются?', 
-                      allows_multiple_answers: true, options: ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
+                      allows_multiple_answers: true, options: ["Пт\xE2\x9A\x94", "Сб0\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
                         "Сб3\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"], is_anonymous: false)
     user.update(step: 'create_prerecording')
     message.text
   end
 
   def create_prerecording(message, bot, user, vote_message)
-    choosed_options = message.option_ids.map { |l| ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
+    choosed_options = message.option_ids.map { |l| ["Пт\xE2\x9A\x94", "Сб0\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
       "Сб3\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"][l.to_i] }
     available_trainings = choosed_options.map { |c| c.include?("\xf0\x9f\x8f\xb9") ? 5 : 10 }
     Prerecording.last.update(choosed_options: choosed_options.join(','), 
@@ -56,13 +56,13 @@ module OpenPrerecording
           if available_trainings[option.to_i] == 0
             UserPrerecording.where(voted: false).each do |up|
               if up.passport
-                if up.passport.user && (up.passport.subscription < 200 || up.passport.id == 2)
+                if up.passport.user && ((up.passport.subscription > 0 && up.passport.subscription < 200) || up.passport.id == 2)
                   begin
                     bot.api.send_message(chat_id: up.passport.user.telegram_id,
                                         text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
                                               " снова открыта, скорее забирайте !!!")
                   rescue
-                    p "Пользовательзаблокировал бота"
+                    p "Пользователь #{pass.user.username} заблокировал бота"
                   end
                 end
               end
@@ -81,13 +81,13 @@ module OpenPrerecording
         prerec.update(closed_prerecordings: (closed_trainings << option.to_i).join(','))
         UserPrerecording.where(voted: false).each do |up|
           if up.passport
-            if up.passport.user
+            if up.passport.user && ((up.passport.subscription > 0 && up.passport.subscription < 200) || up.passport.id == 2)
               begin
                 bot.api.send_message(chat_id: up.passport.user.telegram_id,
                                     text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
                                           " закрыта, в случае голосавания голос не будет учтен !!!")
               rescue
-                p "Пользователь заблокировал бота"
+                p "Пользователь #{pass.user.username} заблокировал бота"
               end
             end
           end

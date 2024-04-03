@@ -11,9 +11,6 @@ export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetUserHistory
                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory GetKvests]
 
-options =  ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
-            "Сб3\xf0\x9f\x8f\xb9" "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"]
-
 ['./telegram/modules/*.rb', './telegram/modules/user_modules/*.rb'].each { |p| Dir[p].each { |f| require f } }
 export.each { |m| include(Kernel.const_get(m)) }
 export_for_user.each { |m| include(Kernel.const_get(m)) }
