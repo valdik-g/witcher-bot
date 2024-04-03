@@ -56,7 +56,7 @@ module OpenPrerecording
           if available_trainings[option.to_i] == 0
             UserPrerecording.where(voted: false).each do |up|
               if up.passport
-                if up.passport.user
+                if up.passport.user && (up.passport.subscription < 200 || up.passport.id == 2)
                   begin
                     bot.api.send_message(chat_id: up.passport.user.telegram_id,
                                         text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
