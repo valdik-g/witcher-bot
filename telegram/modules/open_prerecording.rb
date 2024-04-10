@@ -17,14 +17,14 @@ module OpenPrerecording
   def input_vote_message(message, bot, user)
     bot.api.send_poll(chat_id: message.chat.id, question: 'Какие тренировки планируются?', 
                       allows_multiple_answers: true, options: ["Пт\xE2\x9A\x94", "Сб0\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
-                        "Сб3\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"], is_anonymous: false)
+                        "Сб3\xf0\x9f\x8f\xb9", "Сб4\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"], is_anonymous: false)
     user.update(step: 'create_prerecording')
     message.text
   end
 
   def create_prerecording(message, bot, user, vote_message)
     choosed_options = message.option_ids.map { |l| ["Пт\xE2\x9A\x94", "Сб0\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
-      "Сб3\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"][l.to_i] }
+      "Сб3\xf0\x9f\x8f\xb9", "Сб4\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"][l.to_i] }
     available_trainings = choosed_options.map { |c| c.include?("\xf0\x9f\x8f\xb9") ? 5 : 10 }
     Prerecording.last.update(choosed_options: choosed_options.join(','), 
                              available_trainings: available_trainings.join(','))
