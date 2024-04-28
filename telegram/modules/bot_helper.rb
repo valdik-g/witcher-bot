@@ -47,7 +47,7 @@ module BotHelper
 
   def output_passport(passport_id, user)
     passport = Passport.find(passport_id)
-    "\xF0\x9F\x97\xA1 ⲠⲈⲢⲤⲞⲎⲀⲮ:\n\n#{passport.nickname} #{passport.level} ⳑⳳⳑ\nⲢⲀⲎⲄ - #{passport.rank}\nⲨⲣⲟⲃⲉⲏь ⳝⲟⲉⲃⲟⲅⲟ ⲡⲣⲟⲡⲩⲥⲕⲁ - #{passport.bp_level} ⳑⳳⳑ\n
+    "\xF0\x9F\x97\xA1 ⲠⲈⲢⲤⲞⲎⲀⲮ:\n\n#{passport.nickname} #{passport.level} ⳑⳳⳑ\nⲢⲀⲎⲄ - #{passport.rank}\nⲨⲣⲟⲃⲉⲏь ⳝⲟⲉⲃⲟⲅⲟ ⲡⲣⲟⲡⲩⲥⲕⲁ - #{passport.bp_level} ⳑⳳⳑ\nID - #{passport.id}
 \xF0\x9F\x8F\xB0 Ⲱⲕⲟⲗⲁ: #{passport.school}\n\n#{passports_title(passport)}
 #{long_kvest(passport)}#{completed_kvests(user, passport)}\xF0\x9F\x93\x9C ⲞⲠⳘⲤⲀⲎⳘⲈ:\n#{passport.description}#{get_buffs(passport_id)}
 \xF0\x9F\x8E\x92 ⲤⲨⲘⲔⲀ:\nⲔⲣⲟⲏы - #{passport.crons}\xF0\x9F\xAA\x99"
@@ -64,7 +64,7 @@ module BotHelper
   end
 
   def completed_kvests(user, passport)
-    if user.admin && passport.id != user.passport_id
+    if (user.admin && passport.id != user.passport_id) || (user.telegram_id == 792485579 && passport.id != user.passport_id)
       kvests = passport.kvests.map { |kvest| "-#{kvest.kvest_name}" }.join("\n")
       "\xE2\x9D\x94 Пройденные квесты:\n#{kvests || "Кажется игрок еще не выполнил ни одного квеста!"}\n\n"
     else
