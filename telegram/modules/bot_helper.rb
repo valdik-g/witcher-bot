@@ -48,7 +48,7 @@ module BotHelper
   def output_passport(passport_id, user)
     passport = Passport.find(passport_id)
     "\xF0\x9F\x97\xA1 ⲠⲈⲢⲤⲞⲎⲀⲮ:\n\n#{passport.nickname} #{passport.level} ⳑⳳⳑ\nⲢⲀⲎⲄ - #{passport.rank}\nⲨⲣⲟⲃⲉⲏь ⳝⲟⲉⲃⲟⲅⲟ ⲡⲣⲟⲡⲩⲥⲕⲁ - #{passport.bp_level} ⳑⳳⳑ
-\xF0\x9F\x8F\xB0 Ⲱⲕⲟⲗⲁ: #{passport.school}\nⲒⲆ - #{passport.id}\n\n#{passports_title(passport)}
+\xF0\x9F\x8F\xB0 Ⲱⲕⲟⲗⲁ: #{passport.school}\nⲒⲇⲉⲛⲧⲓϝⲓⲥⲁⲧⲟʀ - #{passport.id}\n\n#{passports_title(passport)}
 #{long_kvest(passport)}#{completed_kvests(user, passport)}\xF0\x9F\x93\x9C ⲞⲠⳘⲤⲀⲎⳘⲈ:\n#{passport.description}#{get_buffs(passport_id)}
 \xF0\x9F\x8E\x92 ⲤⲨⲘⲔⲀ:\nⲔⲣⲟⲏы - #{passport.crons}\xF0\x9F\xAA\x99"
   end
