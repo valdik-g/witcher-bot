@@ -322,9 +322,9 @@ Telegram::Bot::Client.run(token) do |bot|
               input_player_passport_number_for_history(message, bot, user)
             end
           end
-          else
-            bot.api.send_message(chat_id: message.chat.id, text: "Ведутся работы, пожалуйста подождите")
-          end
+          # else
+          #   bot.api.send_message(chat_id: message.chat.id, text: "Ведутся работы, пожалуйста подождите")
+          # end
         rescue StandardError
           return_buttons(user, bot, message.chat.id,
                         'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
