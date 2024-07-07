@@ -19,17 +19,14 @@ module LevelUpSumBp
         passport = Passport.find_by(id: passport_id)
         next unless passport
   
-        next_level = passportsum_.bp_level + 1
+        next_level = passport.sum_bp_level + 1
         passport.update(sum_bp_level: passport.sum_bp_level + 1)
-        bot.api.send_message(chat_id: message.chat.id,
-                             text: "Уровень летнего боевого пропуска для игрока #{passport.nickname} повышен до #{passport.reload.sum_bp_level}")
         unless passport.user.nil?
-          bot.api.send_message(chat_id: User.find_by(passport_id: passport.id).telegram_id,
-                               text: "Поздравляем, ваш уровень летнего боевого пропуска повышен до #{passport.sum_bp_level}")
-        end
+            bot.api.send_message(chat_id: User.find_by(passport_id: passport.id).telegram_id,
+                                 text: "Поздравляем, ваш уровень летнего боевого пропуска повышен до #{passport.reload.sum_bp_level}")
+          end
+          return_buttons(user, bot, message.chat.id, "Уровень летнего боевого пропуска для игрока #{passport.nickname} повышен до #{passport.reload.sum_bp_level}")
       end
-  
-      return_buttons(user, bot, message.chat.id, "Уровень боевого пропуска повышен")
     end
   end
   
