@@ -334,6 +334,8 @@ Telegram::Bot::Client.run(token) do |bot|
                           'Бот упал из-за getUpdates')
           elsif e.message.include?('Forbidden: bot was blocked by the user')
             puts "The bot has been blocked by the user."
+          elsif e.message.include?('Unauthorized')
+            puts "The bot is not authorized to perform this action."
           end
         end
       end
