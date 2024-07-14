@@ -142,12 +142,12 @@ Telegram::Bot::Client.run(token) do |bot|
                 choose_inventory_passport(message, bot, user)
               when 'Снять квест'
                 choose_passport_to_remove(message, bot, user)
-              when 'Создать уровень БП'
-                create_bp_kvest(message, bot, user)
-              when 'Повысить уровень БП'
-                choose_level_up_bp_passports(message, bot, user)
-              when 'Отобразить уровни БП'
-                get_all_players_bp(message, bot, user)
+              # when 'Создать уровень БП'
+              #   create_bp_kvest(message, bot, user)
+              # when 'Повысить уровень БП'
+              #   choose_level_up_bp_passports(message, bot, user)
+              # when 'Отобразить уровни БП'
+              #   get_all_players_bp(message, bot, user)
               when 'Повысить уровень летнего БП'
                 choose_level_up_sum_bp_passports(message, bot, user)
               when 'Отобразить уровни летнего БП'
@@ -328,6 +328,13 @@ Telegram::Bot::Client.run(token) do |bot|
         rescue StandardError
           return_buttons(user, bot, message.chat.id,
                         'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
+        rescue Telegram::Bot::Exceptions::ResponseError => e
+          if e.message.include?('Conflict: terminated by other getUpdates request')
+            return_buttons(user, bot, message.chat.id,
+                          'Бот упал из-за getUpdates')
+          elsif e.message.include?('Forbidden: bot was blocked by the user')
+            puts "The bot has been blocked by the user."
+          end
         end
       end
     # end
