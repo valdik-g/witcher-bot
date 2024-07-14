@@ -329,7 +329,10 @@ Telegram::Bot::Client.run(token) do |bot|
           return_buttons(user, bot, message.chat.id,
                         'Похоже возникла ошибка, проверьте правильность введенных данных и повторите ввод')
         rescue Telegram::Bot::Exceptions::ResponseError => e
-          if e.message.include?('Forbidden: bot was blocked by the user')
+          if e.message.include?('Conflict: terminated by other getUpdates request')
+            return_buttons(user, bot, message.chat.id,
+                          'Бот упал из-за getUpdates')
+          elsif e.message.include?('Forbidden: bot was blocked by the user')
             puts "The bot has been blocked by the user."
           elsif e.message.include?('Unauthorized')
             puts "The bot is not authorized to perform this action."
