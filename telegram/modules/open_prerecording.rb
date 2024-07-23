@@ -2,6 +2,10 @@
 
 # module for open prerecording for users
 module OpenPrerecording
+  TRAINING_OPTIONS = ["Пт\xE2\x9A\x94",  "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
+    "Сб3\xf0\x9f\x8f\xb9", "Сб4\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", 
+    "Вс3\xf0\x9f\x8f\xb9"]
+
   def open_prerecording(message, bot, user)
     if user.admin
       (Prerecording.last || Prerecording.create).update(closed: false)
@@ -16,15 +20,13 @@ module OpenPrerecording
 
   def input_vote_message(message, bot, user)
     bot.api.send_poll(chat_id: message.chat.id, question: 'Какие тренировки планируются?', 
-                      allows_multiple_answers: true, options: ["Пт\xE2\x9A\x94",  "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
-                        "Сб3\xf0\x9f\x8f\xb9", "Сб4\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"], is_anonymous: false) # "Сб0\xE2\x9A\x94",
+                      allows_multiple_answers: true, options: TRAINING_OPTIONS, is_anonymous: false)
     user.update(step: 'create_prerecording')
     message.text
   end
 
   def create_prerecording(message, bot, user, vote_message)
-    choosed_options = message.option_ids.map { |l| ["Пт\xE2\x9A\x94", "Сб1\xE2\x9A\x94", "Сб2\xE2\x9A\x94", "Сб2\xf0\x9f\x8f\xb9",
-      "Сб3\xf0\x9f\x8f\xb9", "Сб4\xf0\x9f\x8f\xb9", "Вс0\xE2\x9A\x94", "Вс1\xE2\x9A\x94", "Вс2\xE2\x9A\x94", "Вс3\xf0\x9f\x8f\xb9"][l.to_i] } # "Сб0\xE2\x9A\x94", 
+    choosed_options = message.option_ids.map { |l| TRAINING_OPTIONS[l.to_i] }
     available_trainings = choosed_options.map { |c| c.include?("\xf0\x9f\x8f\xb9") ? 5 : 10 }
     Prerecording.last.update(choosed_options: choosed_options.join(','), 
                              available_trainings: available_trainings.join(','))
@@ -55,15 +57,14 @@ module OpenPrerecording
           available_trainings = prerec.available_trainings.split(',').map(&:to_i)
           if available_trainings[option.to_i] == 0
             UserPrerecording.where(voted: false).each do |up|
-              if up.passport
-                if up.passport.user && ((up.passport.subscription > 0 && up.passport.subscription < 200) || up.passport.id == 2)
-                  begin
-                    bot.api.send_message(chat_id: up.passport.user.telegram_id,
-                                        text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
-                                              " снова открыта, скорее забирайте !!!")
-                  rescue
-                    p "Пользователь #{pass.user.username} заблокировал бота"
-                  end
+              us_passport = up.passport
+              if us_passport&.user && ((us_passport&.subscription > 0 && us_passport&.subscription < 200) || us_passport&.id == 2)
+                begin
+                  bot.api.send_message(chat_id: us_passport&.user.telegram_id,
+                                      text: "!!! Предзапись на тренировку #{prerec.choosed_options.split(',')[option.to_i]}" \
+                                            " снова открыта, скорее забирайте !!!")
+                rescue
+                  p "Пользователь #{pass.user.username} заблокировал бота"
                 end
               end
             end
