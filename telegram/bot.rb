@@ -11,7 +11,7 @@ export = %w[AccrueVisitings AssignTitle BotHelper ChangeRecord ClosePrerecording
 export_for_user = %w[Birthdays ChangeDescription ChangeInfo ChooseTitle GetBest GetHistory GetInventory GetUserHistory
                      GetPassport GetPlayer GetSubscription LeaveFeedback Meme TransferCrons UpdateHistory GetKvests]
 
-['./telegram/modules/*.rb', './telegram/modules/user_modules/*.rb'].each { |p| Dir[p].each { |f| require f } }
+["#{Rails.root.join('./telegram/modules/*.rb').to_s}", "#{Rails.root.join(./telegram/modules/user_modules/*.rb).to_s}"].each { |p| Dir[p].each { |f| require f } }
 export.each { |m| include(Kernel.const_get(m)) }
 export_for_user.each { |m| include(Kernel.const_get(m)) }
 
