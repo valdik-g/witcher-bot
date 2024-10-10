@@ -3,11 +3,15 @@
 # module for changing user description
 module ChangeDescription
   def change_description(message, bot, user)
-    output_all_passports(bot, message.chat.id)
-    bot.api.send_message(chat_id: message.chat.id,
-                         text: 'Жги, выбирай кому поменять описание, вводи циферку',
-                         reply_markup: cancel_markup)
-    user.update(step: 'input_descr_passport')
+    if user.admin
+      output_all_passports(bot, message.chat.id)
+      bot.api.send_message(chat_id: message.chat.id,
+                          text: 'Жги, выбирай кому поменять описание, вводи циферку',
+                          reply_markup: cancel_markup)
+      user.update(step: 'input_descr_passport')
+    else
+      bot.api.send_message(chat_id: message.chat.id, text: 'Ты как сюда залез?)')
+    end
   end
 
   def input_descr_passport(message, bot, user)
