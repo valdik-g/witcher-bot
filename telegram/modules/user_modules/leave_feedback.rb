@@ -19,7 +19,7 @@ module LeaveFeedback
   end
 
   def enter_feedback(message, bot, user, send_feedbacks_author)
-    User.where(admin: true).collect(&:telegram_id).each do |admin|
+    User.admins.collect(&:telegram_id).each do |admin|
       top = if send_feedbacks_author == 'Открыто'
               "Отзыв от #{user.passport.nickname}:\n\n"
             else

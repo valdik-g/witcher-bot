@@ -11,7 +11,7 @@ module ClosePrerecording
         bot.api.send_message(chat_id: passport.user.telegram_id, text: 'Предзапись закрыта') if passport
       end
       output_string = prerecording.choosed_options.split(',').each_with_index.map { |l, i| "#{l}: #{av_trainings[i]}\n" }.join
-      User.where(admin: true).collect(&:telegram_id).each do |admin|
+      User.admins.collect(&:telegram_id).each do |admin|
         bot.api.send_message(chat_id: admin, text: prerecording.close_message)
         bot.api.send_message(chat_id: admin, text: "Количество свободных мест:\n#{output_string}")
       end
