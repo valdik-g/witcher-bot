@@ -22,7 +22,7 @@ module AccrueVisitings
 
   def add_subscription(message, bot, user, passport_id)
     value = message.text
-    passport = Passport.find(passport_id)
+    passport = Passport.find_by(id: passport_id)
     if passport.nil?
       return_buttons(user, bot, message.chat.id)
     else

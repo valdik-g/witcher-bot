@@ -29,7 +29,7 @@ module SubstractVisitings
           end
         end
       elsif passport.subscription.zero?
-        [851_456_156, 612_352_098].each do |admin|
+        [612_352_098].each do |admin|
           bot.api.send_message(chat_id: admin,
                               text: "\xE2\x9A\xA0\xEF\xB8\x8F У #{passport.nickname} закончился абонемент \xE2\x9A\xA0\xEF\xB8\x8F")
         end
